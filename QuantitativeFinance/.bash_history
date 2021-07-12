@@ -14,3 +14,7 @@ which patch
 df
 pwd
 ls
+cd /usr/local/lib/python3.8/dist-packages/trading_calendars
+less trading_calendar.py 
+less trading_calendar.py 
+cp trading_calendar.py ~/
