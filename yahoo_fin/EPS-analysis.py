@@ -35,35 +35,10 @@ import importlib
 importlib.reload(mi)
 
 # %% [markdown]
-# ## Basic usage of mystock_info
-#
-# `get_earnings_history(tickers, clear_cache=1, verbose=False)`
-# arguments:
-# - `tickers`: list of tickers or string of a ticker
-# - `clear_cache`: number of days cache should be kept
-
-# %%
-# test code
-df=mi.get_earnings_history("A",verbose=False)
-display(df.head(3))
-mi.plot_eps(df,last=20,largefig=False)
-
-# %% [markdown]
 # ## Get stock info of your favorite
 
 # %% [markdown]
 # ### Find Tickers with high EPS beat ratio
-#  
-# `mi.search_good_eps(tickers, last=20, threshold=80, min_qtrs=4, clear_cache=False, verbose=False)`
-#
-# arguments:
-# - last: number of quarters to be considred
-# - min_qtrs: number of quarters required for evaluation
-# - threshold: minimum EPS beat ratio in `last` quarters
-#
-# `mi.show_beat_ratio(df,last=40,threshold=95,min_qtrs=20)`
-# - analyze data obtained by mi.search_good_eps()
-# - arguments are same as mi.search_good_eps()
 
 # %%
 # pd.set_option('display.max_rows', df.shape[0]+1)

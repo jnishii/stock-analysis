@@ -53,8 +53,8 @@ def isnewfile(dfname, clear_cache=1, verbose=False):
 # Check the existence of the file `dfname`
 # arguments:
 #    clear_cache: number of days of preserving cache
-#                 set False if you want to use cache despite the time stamp
-#                 of the file.
+#                 set 0 if you want to clear cache and 99999 to preserve 
+#                 despite the time stamp of the file.
 # return value:
 #    None if the file `dfname` doesn't exist
 #    True if (cache was created within `cache_dir` days) or (cache exists and use it (clear_cache=False))
@@ -66,29 +66,29 @@ def isnewfile(dfname, clear_cache=1, verbose=False):
         return None
 
     if clear_cache is False:
-        verbose and print("{} is found and preserve cache".format(fname))
+        verbose and print("{} is found and preserve cache: {}".format(fname,dfname))
         return True
     
     now = datetime.utcnow()
     file_time = datetime.utcfromtimestamp(os.path.getmtime(fname))
     if (now - file_time) > timedelta(clear_cache):
-        verbose and print("more than {} day has passed".format(clear_cache))
+        verbose and print("more than {} day has passed: {}".format(clear_cache,dfname))
         return False
     else:
-        verbose and print("you have new file within {} day".format(clear_cache))
+        verbose and print("you have new file within {} day: {}".format(clear_cache,dfname))
         return True
 
 
-def get_df_from_file(dfname, clear_cache=1, verbose=False):
+def get_cache(fname, clear_cache=1, verbose=False):
 # return
 #   object if dfname is a file within `clear_cache` days
 #   None otherwise (no data file)    
-    if isnewfile(dfname, clear_cache=clear_cache, verbose=verbose):
-        verbose and print("loading cache dat")
-        df = load_pickle(dfname)
-        return df
+    if isnewfile(fname, clear_cache=clear_cache, verbose=verbose):
+        verbose and print("loading cache data: {}".format(fname))
+        obj = load_pickle(fname)
+        return obj
     else:
-        verbose and print("no file found")
+        verbose and print("no cache found:".format(fname))
         return None
     
 def check_ticker(ticker):
@@ -117,7 +117,7 @@ def _get_earnings_history(ticker, clear_cache=1, verbose=False):
     verbose and print("getting data of {}".format(ticker))
 
     dfname = ticker + "_earnings"
-    df=get_df_from_file(dfname, clear_cache=clear_cache, verbose=verbose)
+    df=get_cache(fname=dfname, clear_cache=clear_cache, verbose=verbose)
     if df is not None: # True if data file exists (df is empty if no data is available)
         return(df)
     
@@ -224,16 +224,21 @@ def plot_eps(df, last=1000, largefig=False):
 
 def _get_financial_data(ticker, clear_cache=7, verbose=False):
     dfname = ticker + "_financial"
-    df = get_df_from_file(dfname, clear_cache=clear_cache, verbose=verbose)
+    df = get_cache(fname=dfname, clear_cache=clear_cache, verbose=verbose)
     if df is not None: # True if data file exists (df is empty if no data is available)
         return(df)
     
     if not check_ticker(ticker):
-        print("invalid ticker name")
+        print("invalid ticker name".format(ticker))
         return None    
         
     verbose and print("getting new financial dat")
     dct_qt = si.get_quote_table(ticker)
+    if len(dct_qt) == 0:
+        print("no quote_table data for {}".format(ticker))
+        save_pickle(dfname=dfname, obj=None)
+        return None    
+    
     df_qt = (
         pd.json_normalize(dct_qt)
         .transpose()
@@ -242,7 +247,11 @@ def _get_financial_data(ticker, clear_cache=7, verbose=False):
     )
 
     df_val = si.get_stats_valuation(ticker).set_axis(["info", "values"], axis=1)
-
+    if len(df_val) == 0:
+        print("no valuation data for {}".format(ticker))
+        save_pickle(dfname=df_val, obj=None)
+        return None    
+    
     df = pd.concat([df_qt, df_val], ignore_index=True).sort_values(by="info")
     df["Ticker"] = ticker
     save_pickle(dfname=dfname, obj=df)
@@ -309,17 +318,120 @@ def plot_financials(df, table=False):
 
     return df_tgt
 
+"""
+get revenue data using si.get_data()
+"""
 
-# ## Get stock info of your favorite
-# ### EPS beat ratio が高いTickerを見つける
-# show_beat_ratio(): EPS beat ratioの一覧作成
-# Arguments:
-#   last=20      # # of quarters to be considered 
-#   threshold=80 # if you want to show only beatratio > 80%
-# Usage:
-#   df_eps=get_earnings_history(ticker)
-#   show_beat_ratio(df_eps)
-#
+def _get_revenue(ticker, clear_cache=7, verbose=False):
+    fname = ticker + "_revenue"
+    dct = get_cache(fname=fname, clear_cache=clear_cache, verbose=verbose)
+    if dct is not None: # True if data file exists (df is empty if no data is available)
+        return(dct)
+    
+    if not check_ticker(ticker):
+        print("invalid ticker name")
+        return None    
+        
+    verbose and print("getting new revenue dat")
+    dct_rev = si.get_earnings(ticker)
+    if len(dct_rev) == 0:
+        print("no revenue data for {}".format(ticker))
+        save_pickle(dfname=fname, obj=None)
+        return None    
+    
+    for key in dct_rev.keys():
+        df_tmp=dct_rev[key].copy()
+        df_tmp['Ticker']=ticker
+        dct_rev[key]=df_tmp
+
+    save_pickle(dfname=fname, obj=dct_rev)
+
+    return dct_rev
+
+def get_revenue(tickers, clear_cache=7, verbose=False):
+
+    if isinstance(tickers, str):
+        tickers = [tickers]
+
+    dct = {}
+    for ticker in tickers:
+        ticker = ticker.upper()
+        tmp = _get_revenue(ticker, clear_cache=clear_cache, verbose=verbose)
+        if tmp is not None and len(tmp) != 0:
+            if len(dct) == 0:
+                dct=tmp.copy()
+                continue
+
+            for key in tmp.keys():
+                dct[key]=dct[key].append(tmp[key])
+
+    return dct
+
+
+def _plot_revenue(df, ax, target, title="", ytitle=""):
+
+    d = df.set_index("date")#.sort_index()
+    sns.lineplot(ax=ax, data=d[target], marker="o")
+    ax.set_title(title)
+    ax.tick_params(axis="x", labelrotation=90)
+    ax.set_xlabel("")
+    ax.set_ylabel(ytitle)
+
+def plot_revenue(dct):
+    tickers = dct['quarterly_results'].Ticker.unique()
+
+    sns.set_theme(
+        rc={
+            "axes.titlesize": 16,
+            "axes.labelsize": 14,
+            "font.size": 16,
+            "legend.fontsize": 12,
+        },
+        style="white",
+    )
+
+    n_tick = len(tickers)
+    n_col= n_tick
+    n_row = 3
+    width = 3
+    height = 2.5
+
+#    defaultPlotting()
+    fig, axes = plt.subplots(n_row, n_col, figsize=(width * n_col, height * n_row))
+    fig.suptitle("Revenue history ({})".format(today()))
+
+    keys=["quarterly_results","quarterly_revenue_earnings","yearly_revenue_earnings"]
+    for col, ticker in enumerate(tickers):
+#        for col, key in enumerate(dct):
+        for row, key in enumerate(keys):
+
+            if n_col == 1:
+                ax = axes[row]
+            else:
+                ax = axes[row, col]
+
+            df=dct[key]
+            df=df[df['Ticker']==ticker]
+            if key == 'quarterly_results':
+                _plot_revenue(df,ax,target=["actual","estimate"],ytitle=key, title=ticker)
+            else:
+                _plot_revenue(df,ax,target=["revenue","earnings"],ytitle=key, title=None)
+
+    fig.tight_layout()
+    plt.show()
+
+
+"""
+## Get stock info of your favorite
+### EPS beat ratio が高いTickerを見つける
+show_beat_ratio(): EPS beat ratioの一覧作成
+Arguments:
+  last=20      # # of quarters to be considered 
+  threshold=80 # if you want to show only beatratio > 80%
+Usage:
+  df_eps=get_earnings_history(ticker)
+  show_beat_ratio(df_eps)
+"""
 
 def show_beat_ratio(
     df, last=20, threshold=False, min_qtrs=1, verbose=False
@@ -356,7 +468,7 @@ def show_beat_ratio(
         print("EPS beat ratio (%) within last {} quarters ({})".format(last, today()))
     else:
         print(
-            "Tickers list of which beat ratio >= {} % within last {} quarters".format(
+            "Tickers list of which beat ratio >= {}% within last {} quarters".format(
                 threshold, last, today()
             )
         )
@@ -365,16 +477,27 @@ def show_beat_ratio(
 
     return result[["beat ratio", "beat", "count"]]
 
+"""
+`get_all_data(tickers, last=20, table=True)`
+- run the following
+    1. download EPS history (`get_earnings_history()`))
+    2. download financial data (`get_financial_data()`)
+    3. shows the EPS beat ratios in 'last' quarters (`show_beat_ratio()`)
+- arguments:
+    - `tickers`: list of tickers 
+    - `last=20`: number of quarters to be considred to get EPS beat ratio
+    - `table=False`: show the table of EPS beat ratio or not
+- return value: tuple of return values of get_earnings_history() and get_financial_data()
+"""
 
-# get_all_data(): get_earnings_history()とget_financial_data()の結果を返す。ついでに EPS beat ratioの一覧表示
-def get_all_data(ticker, last=20):
+def get_all_data(tickers, last=20, table=True):
     # get eps history
-    df_earnings = get_earnings_history(ticker)
+    df_earnings = get_earnings_history(tickers)
     # get PSR and others
-    df_ticker = get_financial_data(ticker)
+    df_tickers = get_financial_data(tickers)
 
-    display(show_beat_ratio(df_earnings, last))
-    return (df_earnings, df_ticker)
+    table == True and display(show_beat_ratio(df_earnings, last))
+    return (df_earnings, df_tickers)
 
 
 # %%
@@ -395,7 +518,7 @@ def search_good_eps(tickers, last=20, threshold=80, min_qtrs=4, clear_cache=Fals
         if len(df_new) != 0:
             df = df.append(df_new)
         i = i + step
-        time.sleep(60)
+        n_tick >= step and time.sleep(60)
 
     df_best = show_beat_ratio(df, last=last, threshold=threshold, min_qtrs=min_qtrs)
     display(df_best)
