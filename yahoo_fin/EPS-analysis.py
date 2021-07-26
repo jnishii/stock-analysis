@@ -9,7 +9,7 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.11.4
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -66,31 +66,25 @@ growth1=ant+saas+ecommerce
 growth2=fintech+media+techs+eauto
 
 # %%
-df_fangam=mi.get_all_data(fangam)
-mi.plot_eps(df_fangam[0],last=20)
+df_all = pd.DataFrame()
+for i in [fangam, growth1, growth2]:
+    df = mi.get_all_data(i, table=False)
+    mi.plot_eps(df[0], last=20)
+    df_all = df_all.append(df[0])
 
-# growth1
-df_growth1=mi.get_all_data(growth1)
-mi.plot_eps(df_growth1[0],last=20)
-
-# growth2
-df_growth2=mi.get_all_data(growth2)
-mi.plot_eps(df_growth2[0],last=20)
-
-
-df_all=pd.concat([df_fangam[0],df_growth1[0],df_growth2[0]])
+df_all = pd.concat([df_fangam[0], df_growth1[0], df_growth2[0]])
 display(mi.show_beat_ratio(df_all, last=20))
 
 # all PSR
-df_all_psr=pd.concat([df_fangam[1],df_growth1[1],df_growth2[1]])
-df_res=mi.plot_financials(df_all_psr, table=True)
+df_all_psr = pd.concat([df_fangam[1], df_growth1[1], df_growth2[1]])
+df_res = mi.plot_financials(df_all_psr, table=True)
 
 # %% [markdown]
 # ## FANGAMのみ大きく出してみる
 
 # %%
-plot_eps(df_fangam[0],largefig=True)
-show_beat_ratio(df_fangam[0], last=200)
+mi.plot_eps(df_fangam[0],largefig=True)
+mi.show_beat_ratio(df_fangam[0], last=200)
 
 # %% [markdown]
 # ## Health
@@ -105,3 +99,5 @@ mi.plot_eps(df_health_eps,last=20)
 mi.show_beat_ratio(df_health_eps)
 
 df_res=mi.plot_financials(df_health_fin,table=True)
+
+# %%

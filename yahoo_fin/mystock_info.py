@@ -278,9 +278,9 @@ def col_name(df, str):
     return [col for col in df.columns if str in col]
 
 
-def plot_financials(df, table=False):
+def plot_financials(df, hist=True, table=True, key="PSR", ascending=False):
 # return PSR sorted list
-
+    key=key.upper()
     PSR = col_name(df, "Price/Sales")
     PBR = col_name(df, "Price/Book")
     PER = col_name(df, "PE Ratio")
@@ -290,6 +290,7 @@ def plot_financials(df, table=False):
     Date = col_name(df, "Earnings Date")
     Dividend = col_name(df, "Forward Dividend")
     Price = col_name(df, "Close")
+    key_dct={"PSR":PSR,"PBR":PBR,"PER":PER,"EPS":EPS,"CAP":Cap}
 
     #    numeric=Price+Target+PSR+PER+PBR+EPS
     numeric = Price + Target + PSR + PER + PBR
@@ -299,15 +300,16 @@ def plot_financials(df, table=False):
     #     plt.xlabel("PSR")
     #     plt.show()
 
-    defaultPlotting()
-    ax = sns.histplot(data=df[PSR], bins=20).set_title(
-        "PSR histogram ({})".format(today())
-    )
-    plt.xlabel("PSR")
-    plt.show()
+    if hist == True:
+        defaultPlotting()
+        ax = sns.histplot(data=df[key_dct[key]], bins=20).set_title(
+            "PSR histogram ({})".format(today())
+        )
+        plt.xlabel("PSR")
+        plt.show()
 
     target = Cap + numeric + Date
-    df_tgt = df[target].sort_values(by=PSR, ascending=False)
+    df_tgt = df[target].sort_values(by=key_dct[key], ascending=ascending)
 
     if table == True:
         print("PSR sorted list ({})".format(today))
@@ -392,7 +394,9 @@ def plot_revenue(dct):
 
     n_tick = len(tickers)
     n_col= n_tick
-    n_row = 3
+#    n_row = 3
+    n_row = 2
+
     width = 3
     height = 2.5
 
@@ -400,7 +404,10 @@ def plot_revenue(dct):
     fig, axes = plt.subplots(n_row, n_col, figsize=(width * n_col, height * n_row))
     fig.suptitle("Revenue history ({})".format(today()))
 
-    keys=["quarterly_results","quarterly_revenue_earnings","yearly_revenue_earnings"]
+#    keys=["quarterly_results","quarterly_revenue_earnings","yearly_revenue_earnings"]
+    # omit "quarterly_revenue_earnings" because it's only last quarters data of EPS estimate/actual.
+    keys=["quarterly_revenue_earnings","yearly_revenue_earnings"]
+
     for col, ticker in enumerate(tickers):
 #        for col, key in enumerate(dct):
         for row, key in enumerate(keys):
@@ -414,8 +421,10 @@ def plot_revenue(dct):
             df=df[df['Ticker']==ticker]
             if key == 'quarterly_results':
                 _plot_revenue(df,ax,target=["actual","estimate"],ytitle=key, title=ticker)
-            else:
-                _plot_revenue(df,ax,target=["revenue","earnings"],ytitle=key, title=None)
+            elif key == 'quarterly_revenue_earnings':
+                _plot_revenue(df,ax,target=["revenue","earnings"],ytitle="Quarterly revenue", title=None)
+            else: # key == "yearly_revenue_earnings"
+                _plot_revenue(df,ax,target=["revenue","earnings"],ytitle="Yearly revenue", title=None)
 
     fig.tight_layout()
     plt.show()
