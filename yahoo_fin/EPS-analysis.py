@@ -43,8 +43,7 @@ importlib.reload(mi)
 # %%
 # pd.set_option('display.max_rows', df.shape[0]+1)
 tickers_nasdaq = si.tickers_nasdaq()
-nas10=mi.search_good_eps(tickers=tickers_nasdaq[0:10],last=20,threshold=90,verbose=False)
-mi.show_beat_ratio(nas10,last=40,threshold=95,min_qtrs=20)
+ret=mi.search_good_eps(tickers_nasdaq[:10],last=40,threshold=95,min_qtrs=20)
 
 # %% [markdown]
 # ## analyze tech companies
@@ -70,21 +69,17 @@ df_eps = pd.DataFrame()
 df_psr = pd.DataFrame()
 
 for i in [fangam, growth1, growth2]:
-    df = mi.get_all_data(i, table=False)
-    mi.plot_eps(df[0], last=20)
-    df_eps = df_eps.append(df[0])
-    df_psr = df_psr.append(df[1])
+    mi.plot_eps(i)
     
-
-display(mi.show_beat_ratio(df_eps, last=20))
-df_res = mi.plot_financials(df_psr, table=True)
+mi.search_good_eps(fangam+growth1+growth2, last=20)
+df_res = mi.plot_financials(fangam+growth1+growth2, table=True)
 
 # %% [markdown]
 # ## FANGAMのみ大きく出してみる
 
 # %%
-mi.plot_eps(df_fangam[0],largefig=True)
-mi.show_beat_ratio(df_fangam[0], last=200)
+mi.plot_eps(fangam,largefig=True)
+mi.search_good_eps(fangam, last=200)
 
 # %% [markdown]
 # ## Health
@@ -108,10 +103,8 @@ tickers_health = [
 
 # %%
 # EPS history
-df_health_eps,df_health_fin=mi.get_all_data(tickers_health)
-mi.plot_eps(df_health_eps,last=20)
-mi.show_beat_ratio(df_health_eps)
-
-df_res=mi.plot_financials(df_health_fin,table=True)
+mi.plot_eps(tickers_health,last=20)
+mi.search_good_eps(tickers_health)
+df_res=mi.plot_financials(tickers_health,table=True)
 
 # %%

@@ -169,8 +169,10 @@ def _plot_eps(df, ax, last):
     ax.set_ylabel("EPS")
 
 
-def plot_eps(df, last=1000, largefig=False):
+#def plot_eps(df, last=1000, largefig=False):
+def plot_eps(tickers, clear_cache=1, last=20, largefig=False, verbose=False):
 
+    df=get_earnings_history(tickers, clear_cache=clear_cache, verbose=verbose)
     tickers = df.ticker.unique()
     n_tick = len(tickers)
 
@@ -210,6 +212,7 @@ def plot_eps(df, last=1000, largefig=False):
 
     fig.tight_layout()
     plt.show()
+    return(df)
 
 
 # get_financial_data() calls si.get_quote_table() and si.get_stats_valuation(), and combine the results
@@ -274,7 +277,10 @@ def col_name(df, str):
     return [col for col in df.columns if str in col]
 
 
-def plot_financials(df, hist=True, table=True, key="PSR", ascending=False):
+#def plot_financials(df, hist=True, table=True, key="PSR", ascending=False):
+def plot_financials(tickers, clear_cache=7, hist=True, table=True, key="PSR", ascending=False, verbose=False):
+    df = get_financial_data(tickers, clear_cache=clear_cache, verbose=verbose)
+
 # return PSR sorted list
     key=key.upper()
     PSR = col_name(df, "Price/Sales")
@@ -372,10 +378,13 @@ def _plot_revenue(df, ax, target, title="", ytitle=""):
     sns.lineplot(ax=ax, data=d[target], marker="o")
     ax.set_title(title)
     ax.tick_params(axis="x", labelrotation=90)
+    ax.axhline(linewidth=1, linestyle="--")
     ax.set_xlabel("")
     ax.set_ylabel(ytitle)
 
-def plot_revenue(dct):
+def plot_revenue(tickers, clear_cache=7, verbose=False):
+    dct=get_revenue(tickers, clear_cache=clear_cache, verbose=verbose)
+
     tickers = dct['quarterly_results'].Ticker.unique()
 
     sns.set_theme(
@@ -424,12 +433,13 @@ def plot_revenue(dct):
 
     fig.tight_layout()
     plt.show()
+    return(dct)
 
 
 """
 ## Get stock info of your favorite
-### EPS beat ratio が高いTickerを見つける
-show_beat_ratio(): EPS beat ratioの一覧作成
+### find tickers with high EPS beat ratio from dataframe
+show_beat_ratio()
 Arguments:
   last=20      # # of quarters to be considered 
   threshold=80 # if you want to show only beatratio > 80%
@@ -482,6 +492,30 @@ def show_beat_ratio(
 
     return result[["beat ratio", "beat", "count"]]
 
+# %%
+# search_good_eps(): Search Tickers of which EPS beat ratio is larger than a threshold
+# arguments:
+# - last: number of quarters to be considred
+# - min_qtrs: number of quarters required for evaluation
+# - threshold: minimum EPS beat ratio in `last` quarters
+def search_good_eps(tickers, last=20, threshold=80, min_qtrs=4, clear_cache=False, verbose=False):
+
+    n_tick = len(tickers)
+    step = 10
+    i = 0
+    df = pd.DataFrame()
+    while i < n_tick:
+        end = min(i + step, n_tick)
+        df_new = get_earnings_history(tickers[i:end], clear_cache, verbose=verbose)
+        if len(df_new) != 0:
+            df = df.append(df_new)
+        i = i + step
+
+    df_best = show_beat_ratio(df, last=last, threshold=threshold, min_qtrs=min_qtrs)
+    display(df_best)
+    return df
+
+
 """
 `get_all_data(tickers, last=20, table=True)`
 - run the following
@@ -503,29 +537,4 @@ def get_all_data(tickers, last=20, table=True):
 
     table == True and display(show_beat_ratio(df_earnings, last))
     return (df_earnings, df_tickers)
-
-
-# %%
-# search_good_eps(): Search Tickers of which EPS beat ratio is larger than a threshold
-# arguments:
-# - last: number of quarters to be considred
-# - min_qtrs: number of quarters required for evaluation
-# - threshold: minimum EPS beat ratio in `last` quarters
-def search_good_eps(tickers, last=20, threshold=80, min_qtrs=4, clear_cache=False, verbose=False):
-
-    n_tick = len(tickers)
-    step = 10
-    i = 0
-    df = pd.DataFrame()
-    while i < n_tick:
-        end = min(i + step, n_tick)
-        df_new = get_earnings_history(tickers[i:end], clear_cache, verbose=verbose)
-        if len(df_new) != 0:
-            df = df.append(df_new)
-        i = i + step
-        n_tick >= step and time.sleep(60)
-
-    df_best = show_beat_ratio(df, last=last, threshold=threshold, min_qtrs=min_qtrs)
-    display(df_best)
-    return df
 
