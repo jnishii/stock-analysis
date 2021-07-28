@@ -57,7 +57,7 @@ ant=["ADBE","NVDA","TSLA"]
 saas=["CRWD","OKTA","ZS","TTD","TWLO"]
 ecommerce=["SHOP","ETSY","FIVN"]
 
-fintech=["SQ","DOCU"]
+fintech=["SQ","DOCU", "PYPL"]
 media=["TWTR","PINS"]
 techs=["U","ZM","FVRR","ABNB","ROKU"]
 eauto=["F","GM","MGA"]
@@ -66,18 +66,18 @@ growth1=ant+saas+ecommerce
 growth2=fintech+media+techs+eauto
 
 # %%
-df_all = pd.DataFrame()
+df_eps = pd.DataFrame()
+df_psr = pd.DataFrame()
+
 for i in [fangam, growth1, growth2]:
     df = mi.get_all_data(i, table=False)
     mi.plot_eps(df[0], last=20)
-    df_all = df_all.append(df[0])
+    df_eps = df_eps.append(df[0])
+    df_psr = df_psr.append(df[1])
+    
 
-df_all = pd.concat([df_fangam[0], df_growth1[0], df_growth2[0]])
-display(mi.show_beat_ratio(df_all, last=20))
-
-# all PSR
-df_all_psr = pd.concat([df_fangam[1], df_growth1[1], df_growth2[1]])
-df_res = mi.plot_financials(df_all_psr, table=True)
+display(mi.show_beat_ratio(df_eps, last=20))
+df_res = mi.plot_financials(df_psr, table=True)
 
 # %% [markdown]
 # ## FANGAMのみ大きく出してみる
@@ -90,7 +90,21 @@ mi.show_beat_ratio(df_fangam[0], last=200)
 # ## Health
 
 # %%
-tickers_health=["A","AMGN","ANTM","BMY","BNTX","BIIB","MRNA","PGNY","PFE","RPRX","VEEV"]
+tickers_health = [
+    "A",
+    "AMGN",
+    "ANTM",
+    "BMY",
+    "BNTX",
+    "BIIB",
+    "DHR",
+    "MRNA",
+    "PGNY",
+    "PFE",
+    "RPRX",
+    "VEEV",
+    "INOV"
+]
 
 # %%
 # EPS history

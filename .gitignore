@@ -1,6 +1,9 @@
+.cache/
+.config/
 .ipynb_checkpoints
-.lesshst
-.local
 .ipython/
+.jupyter/
+.lesshst
+.local/
 tmp/
 __pycache__

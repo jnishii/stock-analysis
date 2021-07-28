@@ -175,20 +175,16 @@ def plot_eps(df, last=1000, largefig=False):
     n_tick = len(tickers)
 
     if largefig == True:
-        width = 12
-        height = 8
+        width = 10
+        height = 6
         max_col = 1
     else:
-        width = 6
-        height = 4.5
-        if n_tick <= 3:
+        width = 5
+        height = 4
+        if n_tick <= 4:
             max_col = n_tick
-        elif n_tick == 4:
-            max_col = 2
-        elif n_tick <= 6:
-            max_col = 3
         else:
-            max_col = 3
+            max_col = 4
     #        max_col=4
 
     n_tick = len(tickers)
@@ -419,10 +415,10 @@ def plot_revenue(dct):
 
             df=dct[key]
             df=df[df['Ticker']==ticker]
-            if key == 'quarterly_results':
-                _plot_revenue(df,ax,target=["actual","estimate"],ytitle=key, title=ticker)
-            elif key == 'quarterly_revenue_earnings':
-                _plot_revenue(df,ax,target=["revenue","earnings"],ytitle="Quarterly revenue", title=None)
+#            if key == 'quarterly_results':
+#                _plot_revenue(df,ax,target=["actual","estimate"],ytitle=key, title=ticker)
+            if key == 'quarterly_revenue_earnings':
+                _plot_revenue(df,ax,target=["revenue","earnings"],ytitle="Quarterly revenue", title=ticker)
             else: # key == "yearly_revenue_earnings"
                 _plot_revenue(df,ax,target=["revenue","earnings"],ytitle="Yearly revenue", title=None)
 
