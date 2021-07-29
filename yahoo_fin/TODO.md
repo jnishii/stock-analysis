@@ -1,6 +1,5 @@
 
 [] rename mysotck-info
-[] Screaning by revenue beat ratio
 [] balance sheet analysis
 
 - mi.plot_financials(df_all_psr, table=True)

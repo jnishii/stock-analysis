@@ -293,11 +293,13 @@ def plot_financials(tickers, clear_cache=7, hist=True, table=True, key="PSR", as
     Dividend = col_name(df, "Forward Dividend")
     Price = col_name(df, "Close")
     key_dct={"PSR":PSR,"PBR":PBR,"PER":PER,"EPS":EPS,"CAP":Cap}
-
+    df[Cap] = df[Cap].apply(lambda x: x.str.replace(r"T$", "e12", regex=True))
+    df[Cap] = df[Cap].apply(lambda x: x.str.replace(r"B$", "e9", regex=True))
+    df[Cap] = df[Cap].apply(lambda x: x.str.replace(r"M$", "e6", regex=True))
+    
     #    numeric=Price+Target+PSR+PER+PBR+EPS
-    numeric = Price + Target + PSR + PER + PBR
+    numeric = Cap + Price + Target + PSR + PER + PBR
     df[numeric] = df[numeric].astype("float")
-
     #     df[PSR].plot(kind="hist",bins=20)
     #     plt.xlabel("PSR")
     #     plt.show()
@@ -310,14 +312,14 @@ def plot_financials(tickers, clear_cache=7, hist=True, table=True, key="PSR", as
         plt.xlabel("PSR")
         plt.show()
 
-    target = Cap + numeric + Date
+    target = numeric + Date
+    
     df_tgt = df[target].sort_values(by=key_dct[key], ascending=ascending)
-
     if table == True:
-        print("PSR sorted list ({})".format(today))
+        print("{} sorted list ({})".format(key,today))
         display(df_tgt)
     else:
-        print("The top 5 PSR stocks ({})".format(today))
+        print("The top 5 {} stocks ({})".format(key,today))
         display(df_tgt.head())
 
     return df_tgt

@@ -154,8 +154,6 @@ df_eps=mi.search_good_eps(tickers=gafam, last=20, threshold=80, min_qtrs=4)
 #     
 
 # %%
-tickers_dow = si.tickers_dow()  # get ticker list of NY Dow
-
 df_psr_sorted = mi.plot_financials(tickers_dow, hist=True, table=True)
 
 # %% [markdown]
