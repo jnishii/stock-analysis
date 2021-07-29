@@ -104,7 +104,7 @@ tickers_health = [
 # %%
 # EPS history
 mi.plot_eps(tickers_health,last=20)
-mi.search_good_eps(tickers_health)
+#mi.search_good_eps(tickers_health)
 df_res=mi.plot_financials(tickers_health,table=True)
 
 # %%

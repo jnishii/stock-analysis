@@ -63,53 +63,16 @@ importlib.reload(mi)
 # %% [markdown]
 # ## Download and plot EPS history
 #
-# ##  plot_eps(tickers, clear_cache=1, last=20, largefig=False, verbose=False)
+# ###  plot_eps(tickers, clear_cache=1, last=20, largefig=False, verbose=False)
 # - This function plots EPS history.
 # - It calls `get_earnings_history()` (see below) inside the function and returns the obtained dataframe.
 # - arguments:
 #     - `tickers`: list of tickers (list) or a ticker name (string)
 #     - `clear_cache`: number of days cache should be kept
 #
-# ### show_beat_ratio(tickers ,last=40,threshold=95,min_qtrs=20)
-# - Use this function if you want to analyze EPS beat ratio
-# - This function calls `get_earnings_history()` and shows the ticker list with EPS beat ratio >= threshold.
-# - Arguments:
-#     - `last=20`      number of quarters to be considered 
-#     - `threshold=80` if you want to show only beatratio > 80%. set False to show all data
-#     
-# ### get_earnings_history(tickers, clear_cache=1, verbose=False)
+# ### screening_eps(tickers, last=20, threshold=80, min_qtrs=4, clear_cache=False, verbose=False)
 #
-# - This function download EPS history data and returns the dataframe.
-# - Usually you don't need to call this function by yourself.
-# - front end of [yahoo_fin.stock_info.get_earnings_history()](http://theautomatic.net/yahoo_fin-documentation/#get_earnings_history) 
-# - arguments:
-#     - `tickers`: list of tickers or string of a ticker
-#     - `clear_cache`: number of days cache should be kept    
-
-# %%
-# %%time
-gafam=["GOOG","FB","AAPL","AMZN","MS"]
-
-#df_eps=mi.get_earnings_history(gafam)
-#display(df_eps.head(3))
-
-#mi.plot_eps(df_eps,last=20,largefig=False)
-mi.plot_eps(gafam,last=20,largefig=False)
-
-mi.show_beat_ratio(df_eps,threshold=False)
-
-# %% [markdown]
-# If you prefer larger graphs, set the argument `largefig=True` in `plot_eps()`.
-
-# %%
-mi.plot_eps("AAPL",largefig=True)
-
-# %% [markdown]
-# ## Find tickers with high EPS beat ratio
-#
-# You can find good tickers based on the EPS beat ratio using `search_good_eps()` and can make a ranking table using `show_beat_ratio()`
-#
-# ### search_good_eps(tickers, last=20, threshold=80, min_qtrs=4, clear_cache=False, verbose=False)
+# - You can find good tickers based on the EPS beat ratio 
 # - get EPS history data for `tickers` and shows tickers with EPS beat ratio >= `threshold` within `last` quarters and with at least `min_qtrs` EPS data.
 # - return value:
 #     - combined dataframe of get_earnings_history() for all `tickers`, i.e.,
@@ -123,9 +86,28 @@ mi.plot_eps("AAPL",largefig=True)
 #     - `min_qtrs`: number of quarters required for evaluation
 #     - `clear_cache`: number of days of preserving cache. Set False if you want to use cache despite the creation date.
 #     - `threshold`: minimum EPS beat ratio in `last` quarters
+#
+# ### get_earnings_history(tickers, clear_cache=1, verbose=False)
+#
+# - This function download EPS history data and returns the dataframe.
+# - Usually you don't need to call this function by yourself.
+# - front end of [yahoo_fin.stock_info.get_earnings_history()](http://theautomatic.net/yahoo_fin-documentation/#get_earnings_history) 
+# - arguments:
+#     - `tickers`: list of tickers or string of a ticker
+#     - `clear_cache`: number of days cache should be kept    
 
 # %%
-df_eps=mi.search_good_eps(tickers=gafam, last=20, threshold=80, min_qtrs=4)
+gafam=["GOOG","FB","AAPL","AMZN","MS"]
+
+mi.plot_eps(gafam,last=20,largefig=False)
+ret=mi.screening_eps(gafam,threshold=False)
+ret=mi.screening_eps(gafam, last=20, threshold=80, min_qtrs=4)
+
+# %% [markdown]
+# If you prefer larger graphs, set the argument `largefig=True` in `plot_eps()`.
+
+# %%
+mi.plot_eps("AAPL",largefig=True)
 
 # %% [markdown]
 # ## Download and plot financial data

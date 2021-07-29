@@ -277,7 +277,6 @@ def col_name(df, str):
     return [col for col in df.columns if str in col]
 
 
-#def plot_financials(df, hist=True, table=True, key="PSR", ascending=False):
 def plot_financials(tickers, clear_cache=7, hist=True, table=True, key="PSR", ascending=False, verbose=False):
     df = get_financial_data(tickers, clear_cache=clear_cache, verbose=verbose)
 
@@ -293,9 +292,10 @@ def plot_financials(tickers, clear_cache=7, hist=True, table=True, key="PSR", as
     Dividend = col_name(df, "Forward Dividend")
     Price = col_name(df, "Close")
     key_dct={"PSR":PSR,"PBR":PBR,"PER":PER,"EPS":EPS,"CAP":Cap}
-    df[Cap] = df[Cap].apply(lambda x: x.str.replace(r"T$", "e12", regex=True))
-    df[Cap] = df[Cap].apply(lambda x: x.str.replace(r"B$", "e9", regex=True))
-    df[Cap] = df[Cap].apply(lambda x: x.str.replace(r"M$", "e6", regex=True))
+
+    num_dct={"T":12,"B":9,"M":6}
+    for i in num_dct:
+        df[Cap] = df[Cap].apply(lambda x: x.str.replace(r"{}$".format(i), "e{}".format(num_dct[i]), regex=True))
     
     #    numeric=Price+Target+PSR+PER+PBR+EPS
     numeric = Cap + Price + Target + PSR + PER + PBR
@@ -495,12 +495,12 @@ def show_beat_ratio(
     return result[["beat ratio", "beat", "count"]]
 
 # %%
-# search_good_eps(): Search Tickers of which EPS beat ratio is larger than a threshold
+# eps_screaning(): Search Tickers of which EPS beat ratio is larger than a threshold
 # arguments:
 # - last: number of quarters to be considred
 # - min_qtrs: number of quarters required for evaluation
 # - threshold: minimum EPS beat ratio in `last` quarters
-def search_good_eps(tickers, last=20, threshold=80, min_qtrs=4, clear_cache=False, verbose=False):
+def screening_eps(tickers, last=20, threshold=80, min_qtrs=4, clear_cache=False, verbose=False):
 
     n_tick = len(tickers)
     step = 10
