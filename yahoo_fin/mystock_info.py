@@ -101,8 +101,6 @@ def check_ticker(ticker):
     return(ret)
 
 
-# ## Define financial functions
-#
 # get_earnings_history() gets actual/expected EPS history
 # plot_eps() shows the result
 # get_earnings_history store data in cache/ and keeps it one day
@@ -215,14 +213,14 @@ def plot_eps(tickers, clear_cache=1, last=20, largefig=False, verbose=False):
     return(df)
 
 
-# get_financial_data() calls si.get_quote_table() and si.get_stats_valuation(), and combine the results
-# plot_financials() shows a plot of the data from get_financial_data()
+# get_valuation_data() calls si.get_quote_table() and si.get_stats_valuation(), and combine the results
+# plot_financials() shows a plot of the data from get_basic_data()
 # Usage:
-#   df=get_financial_data(tickers)
-#   res=plot_financials(df, table=True)
+#   df=get_valuation_data(tickers)
+#   res=plot_valuation(df, table=True)
 
-def _get_financial_data(ticker, clear_cache=7, verbose=False):
-    dfname = ticker + "_financial"
+def _get_valuation_data(ticker, clear_cache=7, verbose=False):
+    dfname = ticker + "_valuation"
     df = get_cache(fname=dfname, clear_cache=clear_cache, verbose=verbose)
     if df is not None: # True if data file exists (df is empty if no data is available)
         return(df)
@@ -231,7 +229,7 @@ def _get_financial_data(ticker, clear_cache=7, verbose=False):
         print("invalid ticker name".format(ticker))
         return None    
         
-    verbose and print("getting new financial dat")
+    verbose and print("getting new quote table")
     dct_qt = si.get_quote_table(ticker)
     if len(dct_qt) == 0:
         print("no quote_table data for {}".format(ticker))
@@ -258,14 +256,14 @@ def _get_financial_data(ticker, clear_cache=7, verbose=False):
     return df
 
 
-def get_financial_data(tickers, clear_cache=7, verbose=False):
+def get_valuation_data(tickers, clear_cache=7, verbose=False):
     if isinstance(tickers, str):
         tickers = [tickers]
 
     data = pd.DataFrame(index=[], columns=["Ticker", "info", "values"])
     for ticker in tickers:
         ticker = ticker.upper()
-        tmp = _get_financial_data(ticker, clear_cache=clear_cache, verbose=verbose)
+        tmp = _get_valuation_data(ticker, clear_cache=clear_cache, verbose=verbose)
         if tmp is not None and len(tmp) != 0:
             data = data.append(tmp, ignore_index=True)
 
@@ -277,8 +275,8 @@ def col_name(df, str):
     return [col for col in df.columns if str in col]
 
 
-def plot_financials(tickers, clear_cache=7, hist=True, table=True, key="PSR", ascending=False, verbose=False):
-    df = get_financial_data(tickers, clear_cache=clear_cache, verbose=verbose)
+def plot_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", ascending=False, verbose=False):
+    df = get_valuation_data(tickers, clear_cache=clear_cache, verbose=verbose)
 
 # return PSR sorted list
     key=key.upper()
@@ -522,20 +520,20 @@ def screening_eps(tickers, last=20, threshold=80, min_qtrs=4, clear_cache=False,
 `get_all_data(tickers, last=20, table=True)`
 - run the following
     1. download EPS history (`get_earnings_history()`))
-    2. download financial data (`get_financial_data()`)
+    2. download valuation data (`get_valuation_data()`)
     3. shows the EPS beat ratios in 'last' quarters (`show_beat_ratio()`)
 - arguments:
     - `tickers`: list of tickers 
     - `last=20`: number of quarters to be considred to get EPS beat ratio
     - `table=False`: show the table of EPS beat ratio or not
-- return value: tuple of return values of get_earnings_history() and get_financial_data()
+- return value: tuple of return values of get_earnings_history() and get_valuation_data()
 """
 
 def get_all_data(tickers, last=20, table=True):
     # get eps history
     df_earnings = get_earnings_history(tickers)
     # get PSR and others
-    df_tickers = get_financial_data(tickers)
+    df_tickers = get_valuation_data(tickers)
 
     table == True and display(show_beat_ratio(df_earnings, last))
     return (df_earnings, df_tickers)

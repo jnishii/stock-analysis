@@ -1,79 +1,72 @@
-# モジュールのメモ
+## Yahoo financeのFinancials情報
 
-[yahoo_fin](http://theautomatic.net/yahoo_fin-documentation/#installation)
+## メモ
+- 売上高: net sales / operating revenue  / total revenue
+- net income / earning (純利益) : 大きな問題なくても負の場合あり(有価証券の評価損による場合など)
 
-## インストール方法
+## Yahoo financeのquote情報
 
-```bash
-$ pip install yahoo_fin
-```
+基本情報
+- https://finance.yahoo.com/quote/AAPL?p=AAPL
 
-## 取り込めるデータ
+取得関数
+- si.get_quote_table()
+- mi.get_valuation() (以下のstatics情報とともに取得)
 
+## Yahoo financeのstatistics情報
+- https://finance.yahoo.com/quote/NFLX/key-statistics?p=NFLX
 
-- get [summary](https://finance.yahoo.com/quote/GOOGL?p=GOOGL)
-    - `si.get_quote_table(ticker)`
-```
-1y Target Est
-52 Week Range
-Ask
-Avg. Volume
-Beta (5Y Monthly)
-Bid
-Day's Range
-EPS (TTM)
-Earnings Date
-Ex-Dividend Date
-Forward Dividend & Yield
-Market Cap
-Open
-PE Ratio (TTM)
-Previous Close
-Quote Price
-Volume
-```
-- get [statistics](https://finance.yahoo.com/quote/GOOGL/key-statistics?p=GOOGL)
-    - `si.get_stats_valuation(ticker)`
-```
-Market Cap (intraday) 5
-Enterprise Value 3
-Trailing P/E
-Forward P/E 1
-PEG Ratio (5 yr expected) 1
-Price/Sales (ttm)
-Price/Book (mrq)
-Enterprise Value/Revenue 3
-Enterprise Value/EBITDA 7
-```
-上記末尾の数字は，Yahoo Financeのサイトの各項目の注釈番号
-- get [analytics](https://finance.yahoo.com/quote/GOOGL/analysis?p=GOOGL)
-    - `si.get_analysts_info(ticker)`
-```
-Earnings Estimate
-Revenue Estimate
-Earnings History
-EPS Trend
-EPS Revisions
-Growth Estimates
-```
+取得関数
 
-- get earnings history
-    - `si.get_earnings_history(ticker)`
-    - EPS actual/estimate
+- i.get_stats_valuation()
+- mi.get_valuation() (以下のstatics情報とともに取得)
 
 
-## references
-- [Yahoo_fin](http://theautomatic.net/yahoo_fin-documentation/)
-- [HOW TO DOWNLOAD FUNDAMENTALS DATA WITH PYTHON](http://theautomatic.net/2020/05/05/how-to-download-fundamentals-data-with-python/)
+## Yahoo financeのFinancials情報
+### Income Statement
+
+- https://finance.yahoo.com/quote/AAPL/financials?p=AAPL
+
+取得関数
+- si.get_revenue() <= こちらの利用はやめる
+- si.get_income_statement(ticker, yearly = True)
+
+主要な情報
+- Total revenue (売上高, totalRevenue) : revenue
+- Operating Income (営業利益, operatingIncome)
+- Pretax Income (税引き前利益, incomeBeforeTax)
+- Net Income Common Stockholders (当期利益, netIncome) : earnings
 
 
-## Usage
+### Balance Sheet
 
-```
-ticker="SQ"
-df=si.get_quote_table(ticker)
-df=si.get_stats_valuation(ticker)
-dic_tmp=si.get_analysts_info(ticker)
-dic_earnings=si.get_earnings_history(ticker)
-display(df)
-```
+取得関数 : si.get_balance_sheet(ticker, yearly = True)
+
+- Share Issued (発行株式数) <= これの取得は現状不可らしい
+
+### Cash Flow
+
+主要な情報
+
+- Operating Cash Flows (営業キャッシュフロー) : 売上高から原材料費などの支出を引いた現金収支
+- Investing Cash Flows (投資キャッシュフロー) : 保有資産(土地，株)の売却による入金
+- Financing Cash Flows (財務キャッシュフロー): 借入金や社債発行による入金
+- Net Income from Continuing Operation (当期利益(?) 上の"Income Statement"のNet Income Common Stockholdersと同じ額)
+
+
+## スクリーニング
+
+参考資料
+- [【外国株式】営業キャッシュフローによる銘柄選び
+](https://www.sbisec.co.jp/ETGate/?OutSide=on&_ControlID=WPLETmgR001Control&_PageID=WPLETmgR001Mdtl20&_DataStoreID=DSWPLETmgR001Control&_ActionID=DefaultAID&getFlg=on&burl=search_market&cat1=market&cat2=report&dir=report&file=market_report_fo_hiro_161121.html)
+
+主要な情報
+
+1. operating cash flows (営業キャッシュフロー) 
+    - その年の純利益よりも大きくないといけない。(operating cash flow vs earnings)
+    - 毎年増えてないといけない。
+    - ここまでは1株あたりで評価すると良い
+    - 「営業キャッシュフロー/売上高」(営業キャッシュフロー・マージン)が15-30%あること(OCF/revenue)
+2. investing cash flows (投資キャッシュフロー) 
+3. financing cash flows (財務キャッシュフロー) 
+- (1,2,3)が(+,-,+)はgood
