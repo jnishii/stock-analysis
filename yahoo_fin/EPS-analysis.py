@@ -65,14 +65,36 @@ growth1=ant+saas+ecommerce
 growth2=fintech+media+techs+eauto
 
 # %%
+E12 = ["FB", "AAPL", "GOOG", "AMZN", "MSFT"] #Billions
+E11 = ["NFLX", "TSLA","ADBE", "NVDA", "SHOP", "SQ", "ZM"] # over 100 million
+E10_5 = ( # Over 50 million
+    ["CRWD", "TWLO","TWTR"]
+    + [ "DOCU", "ROKU", "ABNB"]
+    + ["GM", "F"]
+)
+E10_1 = ["EPAM","U", "MGA","ZS","OKTA",  "TTD", "ETSY","FIVN", "PINS"] # over 10 million
+
+E9 = ["FVRR","FSLY"] # over 1 million
+
+LIST=E12+E11+E10_5+E10_1+E9
+###
+
+# %%
+mi.plot_valuation(LIST, table=False,key="Cap")
+
+# %%
 df_eps = pd.DataFrame()
 df_psr = pd.DataFrame()
 
-for i in [fangam, growth1, growth2]:
+#for i in [fangam, growth1, growth2]:
+for i in [E12,E11,E10_5,E10_1,E9]:
+    
     mi.plot_eps(i)
     
-mi.search_good_eps(fangam+growth1+growth2, last=20)
-df_res = mi.plot_financials(fangam+growth1+growth2, table=True)
+#mi.screening_eps(fangam+growth1+growth2, last=20)
+#df_res = mi.plot_valuation(fangam+growth1+growth2, table=True)
+mi.screening_eps(LIST, last=20)
+df_res = mi.plot_valuation(LIST, table=True)
 
 # %% [markdown]
 # ## FANGAMのみ大きく出してみる
@@ -85,26 +107,32 @@ mi.search_good_eps(fangam, last=200)
 # ## Health
 
 # %%
-tickers_health = [
-    "A",
-    "AMGN",
-    "ANTM",
-    "BMY",
-    "BNTX",
-    "BIIB",
+H_E11 = [
+    "PFE",
     "DHR",
     "MRNA",
-    "PGNY",
-    "PFE",
-    "RPRX",
-    "VEEV",
-    "INOV"
+    "BMY",
+    "AMGN",
+    "BNTX",
 ]
+H_E10 = [
+    "ANTM",
+    "VEEV",
+    "BIIB",
+    "A",
+    "RPRX",
+]
+H_E9 = [
+    "INOV",
+    "PGNY",
+]
+health = H_E11 + H_E10 + H_E9
 
 # %%
 # EPS history
-mi.plot_eps(tickers_health,last=20)
+mi.plot_eps(health,last=20)
 #mi.search_good_eps(tickers_health)
-df_res=mi.plot_financials(tickers_health,table=True)
+df_res=mi.plot_valuation(health,table=True)
+df_cap=mi.plot_valuation(health,table=True,hist=False,key="Cap")
 
 # %%
