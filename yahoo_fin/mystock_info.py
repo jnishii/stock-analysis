@@ -34,8 +34,9 @@ def today(time=False):
         return datetime.today().strftime("%Y-%m-%d")
 
 def save_pickle(dfname, obj, data_dir=cache_dir):
-# save obj in the pickle format in `data_dir`
-# if obj is None, empty dataframe is saved
+"""save obj in the pickle format in `data_dir`
+if obj is None, empty dataframe is saved
+"""
     if obj is None:
         obj=pd.DataFrame()
 
