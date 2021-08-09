@@ -34,9 +34,25 @@ def today(time=False):
         return datetime.today().strftime("%Y-%m-%d")
 
 def save_pickle(dfname, obj, data_dir=cache_dir):
-"""save obj in the pickle format in `data_dir`
-if obj is None, empty dataframe is saved
-"""
+    """Save obj in the pickle format in `data_dir`.
+    if obj is None, empty dataframe is saved.
+
+    Args:
+        dfname (str): Name of file
+        obj (object): Object to be saved
+        data_dir: place where the object is saved. Default is defined as .cache_dir
+
+    Returns:
+        int: Sum of param1 and param2.
+
+    Examples:
+        Examples should be written in doctest format, and should illustrate how
+        to use the function.
+
+        >>> example_function(4, 5)])
+        9
+
+    """
     if obj is None:
         obj=pd.DataFrame()
 
@@ -45,21 +61,23 @@ if obj is None, empty dataframe is saved
     pickle.dump(obj, open(fname, "wb"))
 
 def load_pickle(dfname, data_dir=cache_dir):
-# load from `dfname` in `data_dir`
+"""Load data from `dfname` in `data_dir`"""
     fname = "{}/{}.pkl".format(data_dir, dfname)
     obj = pickle.load(open(fname, "rb"))
     return(obj)
 
 def isnewfile(dfname, clear_cache=1, verbose=False):
-# Check the existence of the file `dfname`
-# arguments:
-#    clear_cache: number of days of preserving cache
-#                 set 0 if you want to clear cache and 99999 to preserve 
-#                 despite the time stamp of the file.
-# return value:
-#    None if the file `dfname` doesn't exist
-#    True if (cache was created within `cache_dir` days) or (cache exists and use it (clear_cache=False))
-#    False otherwise
+    """Check the existence of the file `dfname`
+
+    Args:
+        clear_cache: number of days of preserving cache
+                     set 0 if you want to clear cache and 99999 to preserve 
+                     despite the time stamp of the file.
+    Returns:
+        None if the file `dfname` doesn't exist
+        True if (cache was created within `cache_dir` days) or (cache exists and use it (clear_cache=False))
+        False otherwise
+    """
     fname = "{}/{}.pkl".format(cache_dir, dfname)
 
     if not os.path.isfile(fname):
