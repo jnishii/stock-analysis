@@ -61,7 +61,7 @@ def save_pickle(dfname, obj, data_dir=cache_dir):
     pickle.dump(obj, open(fname, "wb"))
 
 def load_pickle(dfname, data_dir=cache_dir):
-"""Load data from `dfname` in `data_dir`"""
+    """Load data from `dfname` in `data_dir`"""
     fname = "{}/{}.pkl".format(data_dir, dfname)
     obj = pickle.load(open(fname, "rb"))
     return(obj)
@@ -120,20 +120,34 @@ def check_ticker(ticker):
     return(ret)
 
 
+def get_data(fn, tickers, **kwargs):
+    if isinstance(tickers, str):
+        tickers = [tickers]
+
+    df = pd.DataFrame()
+    for ticker in tickers:
+        ticker = ticker.upper()
+        tmp = fn(ticker=ticker, **kwargs)
+        if tmp is not None and len(tmp) != 0:
+            df = df.append(tmp)
+
+    return df
+
 # get_earnings_history() gets actual/expected EPS history
 # plot_eps() shows the result
 # get_earnings_history store data in cache/ and keeps it one day
 # Usage:
 #   ticker=["SQ"]
 #   df_earnings=get_earnings_history(ticker)
-#   plot_eps(df_earnings)
+#   plot_eps_history(df_earnings)
 
 def _get_earnings_history(ticker, clear_cache=1, verbose=False):
 # return None if no data is available
 
     verbose and print("getting data of {}".format(ticker))
+    type="earnings"
 
-    dfname = ticker + "_earnings"
+    dfname = ticker + "_" + type
     df=get_cache(fname=dfname, clear_cache=clear_cache, verbose=verbose)
     if df is not None: # True if data file exists (df is empty if no data is available)
         return(df)
@@ -142,7 +156,7 @@ def _get_earnings_history(ticker, clear_cache=1, verbose=False):
         print("invalid ticker name {}".format(ticker))
         return None
     
-    verbose and print("getting new dat")
+    verbose and print("getting new {} data".format(type))
     dct = si.get_earnings_history(ticker)
     if len(dct) == 0:
         print("no data for {}".format(ticker))
@@ -156,6 +170,7 @@ def _get_earnings_history(ticker, clear_cache=1, verbose=False):
         return None
 
     df["startdatetime"] = df["startdatetime"].str.replace(r"T.*$", "", regex=True)
+    df["startdatetime"] = pd.to_datetime(df["startdatetime"], errors='coerce')
 
     save_pickle(dfname=dfname, obj=df)
 
@@ -163,31 +178,21 @@ def _get_earnings_history(ticker, clear_cache=1, verbose=False):
 
 
 def get_earnings_history(tickers, clear_cache=1, verbose=False):
+    return get_data(fn=_get_earnings_history, tickers=tickers,clear_cache=clear_cache,verbose=verbose)
 
-    if isinstance(tickers, str):
-        tickers = [tickers]
-
-    df = pd.DataFrame()
-    for ticker in tickers:
-        ticker = ticker.upper()
-        tmp = _get_earnings_history(ticker, clear_cache=clear_cache, verbose=verbose)
-        if tmp is not None and len(tmp) != 0:
-            df = df.append(tmp)
-
-    return df
-
-
-def _plot_eps(df, ax, last):
-    d = df.set_index("startdatetime").sort_index().tail(last)
-    sns.lineplot(ax=ax, data=d[["epsactual", "epsestimate"]], marker="o")
-    ax.set_title(d["ticker"][0])
+def _plot_fig(df, ax, target, title="", ylabel=""):
+    sns.lineplot(ax=ax, data=df[target], marker="o")
+    ax.set_title(title)
     ax.tick_params(axis="x", labelrotation=90)
+    ax.axhline(linewidth=1, linestyle="--")
     ax.set_xlabel("")
-    ax.set_ylabel("EPS")
+    ax.set_ylabel(ylabel)
+    ax.legend(title='')
+    ax.set_xticks(df.index)
+    ax.set_xticklabels(df.index.strftime("%Y-%m"))
+#    ax.xaxis.set_major_locator(plt.MaxNLocator(len(df)))
 
-
-#def plot_eps(df, last=1000, largefig=False):
-def plot_eps(tickers, clear_cache=1, last=20, largefig=False, verbose=False):
+def plot_eps_history(tickers, clear_cache=1, last=20, largefig=False, verbose=False):
 
     df=get_earnings_history(tickers, clear_cache=clear_cache, verbose=verbose)
     tickers = df.ticker.unique()
@@ -200,14 +205,11 @@ def plot_eps(tickers, clear_cache=1, last=20, largefig=False, verbose=False):
     else:
         width = 5
         height = 4
-        if n_tick <= 4:
-            max_col = n_tick
-        else:
-            max_col = 4
-    #        max_col=4
+        max_col = 4
 
     n_tick = len(tickers)
-    n_col = min(n_tick, max_col)
+#    n_col = min(n_tick, max_col)
+    n_col = max_col
     n_row = (n_tick - 1) // max_col + 1
     print("ntick: {}, nrow: {}, ncol: {}".format(n_tick, n_row, n_col))
 
@@ -216,7 +218,6 @@ def plot_eps(tickers, clear_cache=1, last=20, largefig=False, verbose=False):
     fig.suptitle("EPS history within last {} quarters ({})".format(last, today()))
 
     for i, ticker in enumerate(tickers):
-        target = df[df["ticker"] == ticker]
 
         if n_row == 1 or n_col == 1:
             ax = axes if n_tick == 1 else axes[i]
@@ -225,20 +226,23 @@ def plot_eps(tickers, clear_cache=1, last=20, largefig=False, verbose=False):
             col = i % n_col
             ax = axes[row, col]
 
-        _plot_eps(target, ax, min(last, len(target)))
+        df_ticker = df[df["ticker"] == ticker].set_index("startdatetime").sort_index()
+        df_ticker=df_ticker.tail(min(last, len(df_ticker)))
+
+        _plot_fig(df_ticker, ax, target =["epsactual", "epsestimate"],
+        title=df_ticker["ticker"][0],ylabel="EPS")
 
     fig.tight_layout()
     plt.show()
     return(df)
 
 
-# get_valuation_data() calls si.get_quote_table() and si.get_stats_valuation(), and combine the results
-# plot_financials() shows a plot of the data from get_basic_data()
-# Usage:
-#   df=get_valuation_data(tickers)
-#   res=plot_valuation(df, table=True)
 
-def _get_valuation_data(ticker, clear_cache=7, verbose=False):
+def _get_valuation(ticker, clear_cache=7, verbose=False):
+    """Get valuation data of a `ticker` (str)
+
+    See `get_valuation()` for more detail.
+    """
     dfname = ticker + "_valuation"
     df = get_cache(fname=dfname, clear_cache=clear_cache, verbose=verbose)
     if df is not None: # True if data file exists (df is empty if no data is available)
@@ -262,66 +266,120 @@ def _get_valuation_data(ticker, clear_cache=7, verbose=False):
         .set_axis(["info", "values"], axis=1)
     )
 
+    df_st = si.get_stats(ticker).set_axis(["info", "values"], axis=1)
+    df_st = df_st[df_st["info"] != 'Beta (5Y Monthly)']
     df_val = si.get_stats_valuation(ticker).set_axis(["info", "values"], axis=1)
-    if len(df_val) == 0:
-        print("no valuation data for {}".format(ticker))
+    if len(df_st) == 0 or len(df_val) == 0:
+        print("no stats data for {}".format(ticker))
         save_pickle(dfname=df_val, obj=None)
-        return None    
+        return None 
     
-    df = pd.concat([df_qt, df_val], ignore_index=True).sort_values(by="info")
-    df["Ticker"] = ticker
+    df = pd.concat([df_qt, df_st, df_val], ignore_index=True).sort_values(by="info")
+    df["ticker"] = ticker
+
     save_pickle(dfname=dfname, obj=df)
 
     return df
 
+def get_valuation(tickers, clear_cache=7, verbose=False):
+    """Get statistics data of a ticker and return a dataframe
 
-def get_valuation_data(tickers, clear_cache=7, verbose=False):
-    if isinstance(tickers, str):
-        tickers = [tickers]
-
-    data = pd.DataFrame(index=[], columns=["Ticker", "info", "values"])
-    for ticker in tickers:
-        ticker = ticker.upper()
-        tmp = _get_valuation_data(ticker, clear_cache=clear_cache, verbose=verbose)
-        if tmp is not None and len(tmp) != 0:
-            data = data.append(tmp, ignore_index=True)
-
-    df = data.pivot(index="Ticker", columns="info", values="values")
+    This function calls 
+        - si.get_quote_table()
+        ['1y Target Est', '52 Week Range', 'Ask', 'Avg. Volume', 
+        'Beta (5Y Monthly)', 'Bid', "Day's Range", 'EPS (TTM)', 
+        'Earnings Date', 'Ex-Dividend Date', 'Forward Dividend & Yield', 
+        'Market Cap', 'Open', 'PE Ratio (TTM)', 'Previous Close', 
+        'Quote Price', 'Volume']
+        - si.get_stats()
+        ['Beta (5Y Monthly)', '52-Week Change 3', 'S&P500 52-Week Change 3',
+         '52 Week High 3', '52 Week Low 3', '50-Day Moving Average 3',
+         '200-Day Moving Average 3', 'Avg Vol (3 month) 3', 'Avg Vol (10 day) 3',
+         'Shares Outstanding 5', 'Implied Shares Outstanding 6', 'Float',
+         '% Held by Insiders 1',  '% Held by Institutions 1', 'Shares Short (Jul 29, 2021) 4',
+         'Short Ratio (Jul 29, 2021) 4', 'Short % of Float (Jul 29, 2021) 4',
+         'Short % of Shares Outstanding (Jul 29, 2021) 4', 'Shares Short (prior month Jun 29, 2021) 4',
+         'Forward Annual Dividend Rate 4', 'Forward Annual Dividend Yield 4',
+         'Trailing Annual Dividend Rate 3', 'Trailing Annual Dividend Yield 3',
+         '5 Year Average Dividend Yield 4', 'Payout Ratio 4',
+         'Dividend Date 3', 'Ex-Dividend Date 4', 'Last Split Factor 2',
+         'Last Split Date 3', 'Fiscal Year Ends', 'Most Recent Quarter (mrq)',
+         'Profit Margin', 'Operating Margin (ttm)', 'Return on Assets (ttm)',
+         'Return on Equity (ttm)', 'Revenue (ttm)', 'Revenue Per Share (ttm)',
+         'Quarterly Revenue Growth (yoy)', 'Gross Profit (ttm)', 'EBITDA',
+         'Net Income Avi to Common (ttm)', 'Diluted EPS (ttm)',
+         'Quarterly Earnings Growth (yoy)', 'Total Cash (mrq)',
+         'Total Cash Per Share (mrq)', 'Total Debt (mrq)',
+         'Total Debt/Equity (mrq)', 'Current Ratio (mrq)',
+         'Book Value Per Share (mrq)', 'Operating Cash Flow (ttm)',
+         'Levered Free Cash Flow (ttm)']
+        - si.get_stats_valuation()
+        ['Market Cap (intraday) 5', 'Enterprise Value 3',
+         'Trailing P/E', 'Forward P/E 1', 'PEG Ratio (5 yr expected) 1',
+         'Price/Sales (ttm)', 'Price/Book (mrq)', 
+         'Enterprise Value/Revenue 3', 'Enterprise Value/EBITDA 7']
+    and combine the results.
+    """
+    df = get_data(fn=_get_valuation,tickers=tickers,clear_cache=clear_cache,verbose=verbose)
+    tmp=df.info
+    df = df.pivot(index="ticker", columns="info", values="values")
     return df
+
+# def get_valuation_data(tickers, clear_cache=7, verbose=False):
+#     if isinstance(tickers, str):
+#         tickers = [tickers]
+
+#     data = pd.DataFrame(index=[], columns=["ticker", "info", "values"])
+#     for ticker in tickers:
+#         ticker = ticker.upper()
+#         tmp = _get_valuation_data(ticker, clear_cache=clear_cache, verbose=verbose)
+#         if tmp is not None and len(tmp) != 0:
+#             data = data.append(tmp, ignore_index=True)
+
+#     df = data.pivot(index="ticker", columns="info", values="values")
+#     return df
 
 
 def col_name(df, str):
     return [col for col in df.columns if str in col]
 
-
-def plot_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", ascending=False, verbose=False):
-    df = get_valuation_data(tickers, clear_cache=clear_cache, verbose=verbose)
-
-# return PSR sorted list
+def show_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", ascending=False, verbose=False):
+    """Return PSR sorted list."""
     key=key.upper()
+
+    df = get_valuation(tickers, clear_cache=clear_cache, verbose=verbose)
+    
     PSR = col_name(df, "Price/Sales")
     PBR = col_name(df, "Price/Book")
     PER = col_name(df, "PE Ratio")
-    EPS = col_name(df, "EPS")
+    EPS = col_name(df, "EPS (TTM)")
     Target = col_name(df, "Target")
     Cap = ["Market Cap"]
     Date = col_name(df, "Earnings Date")
     Dividend = col_name(df, "Forward Dividend")
     Price = col_name(df, "Close")
-    key_dct={"PSR":PSR,"PBR":PBR,"PER":PER,"EPS":EPS,"CAP":Cap}
+
+    PM = col_name(df, "Profit Margin")
+    QEG= col_name(df, "Quarterly Earnings Growth (yoy)")
+    QRG= col_name(df, "Quarterly Revenue Growth (yoy)")
+    OM= col_name(df, "Operating Margin (ttm)")
+
+    key_dct={"PSR":PSR,"PBR":PBR,"PER":PER,"EPS":EPS,"CAP":Cap,"QEG":QEG,"QRG":QRG}
 
     num_dct={"T":12,"B":9,"M":6}
-    for i in num_dct:
-        df[Cap] = df[Cap].apply(lambda x: x.str.replace(r"{}$".format(i), "e{}".format(num_dct[i]), regex=True))
+    for tic in [Cap,PM,QEG,QRG,OM]:
+        for i in num_dct:
+           df[tic] = df[tic].apply(lambda x: x.str.replace(r"{}$".format(i), "e{}".format(num_dct[i]), regex=True))
+        df[tic] = df[tic].apply(lambda x: x.str.replace(r"[,\%$]", "", regex=True))
     
-    #    numeric=Price+Target+PSR+PER+PBR+EPS
-    numeric = Cap + Price + Target + PSR + PER + PBR
+#    numeric = Cap + Price + Target + PSR + PER + PBR + PM + QEG + QRG + QM
+    numeric = Cap + Price + Target + PSR + PER + PBR + QRG + PM + OM
     df[numeric] = df[numeric].astype("float")
     #     df[PSR].plot(kind="hist",bins=20)
     #     plt.xlabel("PSR")
     #     plt.show()
 
-    if hist == True:
+    if hist:
         defaultPlotting()
         ax = sns.histplot(data=df[key_dct[key]], bins=20).set_title(
             "PSR histogram ({})".format(today())
@@ -329,147 +387,166 @@ def plot_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", asc
         plt.xlabel("PSR")
         plt.show()
 
-    target = numeric + Date
+#    target = numeric + Date
+    target = numeric
+
     
     df_tgt = df[target].sort_values(by=key_dct[key], ascending=ascending)
-    if table == True:
-        print("{} sorted list ({})".format(key,today))
-        display(df_tgt)
+    # https://pandas.pydata.org/pandas-docs/stable/user_guide/style.html
+    # pandas 1.3 allows the following style!!
+    # df_tgt=df_tgt.style.format(na_rep="-", 
+    #     formatter={
+    #     Cap[0]: "{:3.2e}",  
+    #     (Price[0], Target[0]): "{:,.1f}", 
+    #     (PSR[0], PER[0], PBR[0]): "{:,.1f}", 
+    #     (PM[0], QRG[0], QM[0]): "{:.1f}%"
+    #     })
+
+    # http://seaborn.pydata.org/tutorial/color_palettes.html
+    cm = sns.color_palette("Blues", as_cmap=True) # seabornのlight_paletteで緑グラデーションオブジェクトを作成
+
+    def df_styler(df):
+        return df.style.format(
+            {
+            Cap[0]: "{:3.2e}",  
+            Price[0]:"{:,.1f}", Target[0]:"{:,.1f}", 
+            PSR[0]:"{:,.1f}", PER[0]:"{:,.1f}", PBR[0]:"{:,.1f}", 
+            PM[0]: "{:.1f}%", QRG[0]: "{:.1f}%", OM[0]: "{:.1f}%"}, na_rep="-")\
+                .highlight_max(subset=Price+Target,axis=1,color='#f4c17b')\
+                .background_gradient(subset=Cap, cmap=cm)\
+                .bar(subset=PSR+PBR, align='left', vmin=0, color=['#d65f5f', '#549e3f'])\
+                .bar(subset=PER, align='left', vmin=0, color=['#d65f5f', '#bcde93'])\
+                .bar(subset=QRG, align='left', vmin=0, color=['#d65f5f', '#ed936b'])\
+                .bar(subset=OM, align='left', vmin=0, color=['#3c76af'])\
+                .bar(subset=PM, align='left', vmin=0, color=['#aecde1'])
+            
+    if table:
+        print("{} sorted list ({})".format(key,today()))
+        display(df_styler(df_tgt))
+
     else:
-        print("The top 5 {} stocks ({})".format(key,today))
-        display(df_tgt.head())
+        print("The top 5 {} stocks ({})".format(key,today()))
+        display(df_styler(df_tgt.head()))
 
     return df_tgt
 
-"""
-get revenue data using si.get_data()
-"""
-
-def _get_revenue(ticker, clear_cache=7, verbose=False):
-    fname = ticker + "_revenue"
-    dct = get_cache(fname=fname, clear_cache=clear_cache, verbose=verbose)
-    if dct is not None: # True if data file exists (df is empty if no data is available)
-        return(dct)
+# # revenue
+# def _get_revenue_history(ticker, clear_cache=7, verbose=False):
+#     """get revenue data using si.get_data()"""
+#     fname = ticker + "_revenue"
+#     dct = get_cache(fname=fname, clear_cache=clear_cache, verbose=verbose)
+#     if dct is not None: # True if data file exists (df is empty if no data is available)
+#         return(dct)
     
-    if not check_ticker(ticker):
-        print("invalid ticker name")
-        return None    
+#     if not check_ticker(ticker):
+#         print("invalid ticker name")
+#         return None    
         
-    verbose and print("getting new revenue dat")
-    dct_rev = si.get_earnings(ticker)
-    if len(dct_rev) == 0:
-        print("no revenue data for {}".format(ticker))
-        save_pickle(dfname=fname, obj=None)
-        return None    
+#     verbose and print("getting new revenue dat")
+#     dct_rev = si.get_earnings(ticker)
+#     if len(dct_rev) == 0:
+#         print("no revenue data for {}".format(ticker))
+#         save_pickle(dfname=fname, obj=None)
+#         return None    
     
-    for key in dct_rev.keys():
-        df_tmp=dct_rev[key].copy()
-        df_tmp['Ticker']=ticker
-        dct_rev[key]=df_tmp
+#     for key in dct_rev.keys():
+#         df_tmp=dct_rev[key].copy()
+#         df_tmp['Ticker']=ticker
+#         dct_rev[key]=df_tmp
 
-    save_pickle(dfname=fname, obj=dct_rev)
+#     save_pickle(dfname=fname, obj=dct_rev)
 
-    return dct_rev
-
-def get_revenue(tickers, clear_cache=7, verbose=False):
-
-    if isinstance(tickers, str):
-        tickers = [tickers]
-
-    dct = {}
-    for ticker in tickers:
-        ticker = ticker.upper()
-        tmp = _get_revenue(ticker, clear_cache=clear_cache, verbose=verbose)
-        if tmp is not None and len(tmp) != 0:
-            if len(dct) == 0:
-                dct=tmp.copy()
-                continue
-
-            for key in tmp.keys():
-                dct[key]=dct[key].append(tmp[key])
-
-    return dct
+#     return dct_rev
 
 
-def _plot_revenue(df, ax, target, title="", ytitle=""):
+# def get_revenue_history(tickers, clear_cache=7, verbose=False):
 
-    d = df.set_index("date")#.sort_index()
-    sns.lineplot(ax=ax, data=d[target], marker="o")
-    ax.set_title(title)
-    ax.tick_params(axis="x", labelrotation=90)
-    ax.axhline(linewidth=1, linestyle="--")
-    ax.set_xlabel("")
-    ax.set_ylabel(ytitle)
+#     if isinstance(tickers, str):
+#         tickers = [tickers]
 
-def plot_revenue(tickers, clear_cache=7, verbose=False):
-    dct=get_revenue(tickers, clear_cache=clear_cache, verbose=verbose)
+#     dct = {}
+#     for ticker in tickers:
+#         ticker = ticker.upper()
+#         tmp = _get_revenue(ticker, clear_cache=clear_cache, verbose=verbose)
+#         if tmp is not None and len(tmp) != 0:
+#             if len(dct) == 0:
+#                 dct=tmp.copy()
+#                 continue
 
-    tickers = dct['quarterly_results'].Ticker.unique()
+#             for key in tmp.keys():
+#                 dct[key]=dct[key].append(tmp[key])
 
-    sns.set_theme(
-        rc={
-            "axes.titlesize": 16,
-            "axes.labelsize": 14,
-            "font.size": 16,
-            "legend.fontsize": 12,
-        },
-        style="white",
-    )
+#     return dct
 
-    n_tick = len(tickers)
-    n_col= n_tick
-#    n_row = 3
-    n_row = 2
+# def plot_revenue_history(tickers, clear_cache=7, verbose=False):
+#     dct=get_revenue(tickers, clear_cache=clear_cache, verbose=verbose)
 
-    width = 3
-    height = 2.5
+#     tickers = dct['quarterly_results'].Ticker.unique()
 
-#    defaultPlotting()
-    fig, axes = plt.subplots(n_row, n_col, figsize=(width * n_col, height * n_row))
-    fig.suptitle("Revenue history ({})".format(today()))
+#     sns.set_theme(
+#         rc={
+#             "axes.titlesize": 16,
+#             "axes.labelsize": 14,
+#             "font.size": 16,
+#             "legend.fontsize": 12,
+#         },
+#         style="white",
+#     )
 
-#    keys=["quarterly_results","quarterly_revenue_earnings","yearly_revenue_earnings"]
-    # omit "quarterly_revenue_earnings" because it's only last quarters data of EPS estimate/actual.
-    keys=["quarterly_revenue_earnings","yearly_revenue_earnings"]
+#     n_tick = len(tickers)
+#     n_col= n_tick
+# #    n_row = 3
+#     n_row = 2
 
-    for col, ticker in enumerate(tickers):
-#        for col, key in enumerate(dct):
-        for row, key in enumerate(keys):
+#     width = 3
+#     height = 2.5
 
-            if n_col == 1:
-                ax = axes[row]
-            else:
-                ax = axes[row, col]
+# #    defaultPlotting()
+#     fig, axes = plt.subplots(n_row, n_col, figsize=(width * n_col, height * n_row))
+#     fig.suptitle("Revenue history ({})".format(today()))
 
-            df=dct[key]
-            df=df[df['Ticker']==ticker]
-#            if key == 'quarterly_results':
-#                _plot_revenue(df,ax,target=["actual","estimate"],ytitle=key, title=ticker)
-            if key == 'quarterly_revenue_earnings':
-                _plot_revenue(df,ax,target=["revenue","earnings"],ytitle="Quarterly revenue", title=ticker)
-            else: # key == "yearly_revenue_earnings"
-                _plot_revenue(df,ax,target=["revenue","earnings"],ytitle="Yearly revenue", title=None)
+# #    keys=["quarterly_results","quarterly_revenue_earnings","yearly_revenue_earnings"]
+#     # omit "quarterly_revenue_earnings" because it's only last quarters data of EPS estimate/actual.
+#     keys=["quarterly_revenue_earnings","yearly_revenue_earnings"]
 
-    fig.tight_layout()
-    plt.show()
-    return(dct)
+#     for col, ticker in enumerate(tickers):
+# #        for col, key in enumerate(dct):
+#         for row, key in enumerate(keys):
 
+#             if n_col == 1:
+#                 ax = axes[row]
+#             else:
+#                 ax = axes[row, col]
 
-"""
-## Get stock info of your favorite
-### find tickers with high EPS beat ratio from dataframe
-show_beat_ratio()
-Arguments:
-  last=20      # # of quarters to be considered 
-  threshold=80 # if you want to show only beatratio > 80%
-Usage:
-  df_eps=get_earnings_history(ticker)
-  show_beat_ratio(df_eps)
-"""
+#             df=dct[key]
+#             df=df[df['Ticker']==ticker].set_index("date")
 
-def show_beat_ratio(
+# #            if key == 'quarterly_results':
+# #                _plot_revenue(df,ax,target=["actual","estimate"],ytitle=key, title=ticker)
+#             if key == 'quarterly_revenue_earnings':
+#                 _plot_fig(df,ax,target=["revenue","earnings"],ylabel="Quarterly revenue", title=ticker)
+#             else: # key == "yearly_revenue_earnings"
+#                 _plot_fig(df,ax,target=["revenue","earnings"],ylabel="Yearly revenue", title=None)
+
+#     fig.tight_layout()
+#     plt.show()
+#     return(dct)
+
+# EPS beat ratio
+def _show_beat_ratio(
     df, last=20, threshold=False, min_qtrs=1, verbose=False
 ):
+    """get EPS beat ratio
+    Find tickers with high EPS beat ratio from dataframe.
+
+    Args:
+        last=20      # of quarters to be considered 
+        threshold=80 the threshold of EPS beat ratio to be shown
+
+    Examples:
+        df_eps=get_earnings_history(ticker)
+        show_beat_ratio(df_eps)
+    """
     group = ["ticker", "companyshortname"]
     target = (
         df[["startdatetime", "ticker", "epssurprisepct", "companyshortname"]]
@@ -511,14 +588,15 @@ def show_beat_ratio(
 
     return result[["beat ratio", "beat", "count"]]
 
-# %%
-# eps_screaning(): Search Tickers of which EPS beat ratio is larger than a threshold
-# arguments:
-# - last: number of quarters to be considred
-# - min_qtrs: number of quarters required for evaluation
-# - threshold: minimum EPS beat ratio in `last` quarters
-def screening_eps(tickers, last=20, threshold=80, min_qtrs=4, clear_cache=False, verbose=False):
 
+def show_beat_ratio(tickers, last=20, threshold=80, min_qtrs=4, clear_cache=False, verbose=False):
+    """Search tickers of which EPS beat ratio is larger than a threshold
+
+    Args:
+        - last: number of quarters to be considred
+        - min_qtrs: number of quarters required for evaluation
+        - threshold: minimum EPS beat ratio in `last` quarters
+    """
     n_tick = len(tickers)
     step = 10
     i = 0
@@ -530,29 +608,176 @@ def screening_eps(tickers, last=20, threshold=80, min_qtrs=4, clear_cache=False,
             df = df.append(df_new)
         i = i + step
 
-    df_best = show_beat_ratio(df, last=last, threshold=threshold, min_qtrs=min_qtrs)
+    df_best = _show_beat_ratio(df, last=last, threshold=threshold, min_qtrs=min_qtrs)
     display(df_best)
     return df
 
+## financial data
+def _get_financial_history(ticker, clear_cache=1, yearly=True, verbose=False):
+    """return None if no data is available"""
 
-"""
-`get_all_data(tickers, last=20, table=True)`
-- run the following
-    1. download EPS history (`get_earnings_history()`))
-    2. download valuation data (`get_valuation_data()`)
-    3. shows the EPS beat ratios in 'last' quarters (`show_beat_ratio()`)
-- arguments:
-    - `tickers`: list of tickers 
-    - `last=20`: number of quarters to be considred to get EPS beat ratio
-    - `table=False`: show the table of EPS beat ratio or not
-- return value: tuple of return values of get_earnings_history() and get_valuation_data()
-"""
+    verbose and print("getting data of {}".format(ticker))
+    type="financial"
+    term="_y" if yearly else "_q"
+    dfname = ticker + "_" + type + term
+    df=get_cache(fname=dfname, clear_cache=clear_cache, verbose=verbose)
+    if df is not None: # True if data file exists (df is empty if no data is available)
+        return(df)
+    
+    if not check_ticker(ticker):
+        print("invalid ticker name {}".format(ticker))
+        return None
+    
+    verbose and print("getting new {} data".format(type))
+    df_cf = si.get_cash_flow(ticker,yearly=yearly)
+    df_bs = si.get_balance_sheet(ticker,yearly=yearly)
+    df_is = si.get_income_statement(ticker,yearly=yearly)
+
+    if len(df_cf) == 0 or len (df_bs) == 0 or len(df_is)==0:
+        print("no data for {}".format(ticker))
+        save_pickle(dfname=dfname, obj=None)
+        return None
+
+    df = pd.concat([df_cf,df_bs,df_is.drop("netIncome")])
+
+    if len(df) == 0:
+        print("no data for {}".format(ticker))
+        save_pickle(dfname=dfname, obj=None)
+        return None
+
+    df=df.T.astype("float").sort_index()
+    df["ticker"] = ticker
+
+    save_pickle(dfname=dfname, obj=df)
+
+    return df
+
+def get_financial_history(tickers, clear_cache=1, yearly=True, verbose=False):
+    """Get financial history data.
+    
+    Following data will be downloaded.
+    - return values by si.get_cash_flow()
+       ['investments', 'changeToLiabilities',
+       'totalCashflowsFromInvestingActivities', 'netBorrowings',
+       'totalCashFromFinancingActivities', 'changeToOperatingActivities',
+       'issuanceOfStock', 'netIncome', 'changeInCash', 'repurchaseOfStock',
+       'totalCashFromOperatingActivities', 'depreciation',
+       'otherCashflowsFromInvestingActivities', 'dividendsPaid',
+       'changeToInventory', 'changeToAccountReceivables',
+       'otherCashflowsFromFinancingActivities', 'changeToNetincome',
+       'capitalExpenditures']
+    - return values by si.get_balance_sheet()
+    ['totalLiab', 'totalStockholderEquity', 'otherCurrentLiab',
+       'totalAssets', 'commonStock', 'otherCurrentAssets', 'retainedEarnings',
+       'otherLiab', 'treasuryStock', 'otherAssets', 'cash',
+       'totalCurrentLiabilities', 'shortLongTermDebt',
+       'otherStockholderEquity', 'propertyPlantEquipment',
+       'totalCurrentAssets', 'longTermInvestments', 'netTangibleAssets',
+       'shortTermInvestments', 'netReceivables', 'longTermDebt', 'inventory',
+       'accountsPayable']
+    - return values by si.get_income_statement()
+    ['researchDevelopment', 'effectOfAccountingCharges', 'incomeBeforeTax',
+       'minorityInterest', 'netIncome', 'sellingGeneralAdministrative',
+       'grossProfit', 'ebit', 'operatingIncome', 'otherOperatingExpenses',
+       'interestExpense', 'extraordinaryItems', 'nonRecurring', 'otherItems',
+       'incomeTaxExpense', 'totalRevenue', 'totalOperatingExpenses',
+       'costOfRevenue', 'totalOtherIncomeExpenseNet', 'discontinuedOperations',
+       'netIncomeFromContinuingOps', 'netIncomeApplicableToCommonShares']
+
+    """
+    col_names = {
+        "ticker" : "ticker",
+        # from cash flow
+        "totalCashFromOperatingActivities": "OCF",  # "operating cash flows",
+        "totalCashflowsFromInvestingActivities": "ICF",  # "investing cash flows ",
+        "totalCashFromFinancingActivities": "FCF",  # "financing cash flows",
+        "netIncome": "earning",  # "net income"
+        # from income statement
+        "totalRevenue": "revenue",
+        "operatingIncome": "Operating Income",
+        "incomeBeforeTax": "Income Before Tax",
+    }
+
+    df = get_data(fn=_get_financial_history,tickers=tickers,clear_cache=clear_cache,verbose=verbose,yearly=yearly)
+    target= [
+            "ticker",
+        # from cash flow
+            "totalCashFromOperatingActivities",
+            "totalCashflowsFromInvestingActivities",
+            "totalCashFromFinancingActivities",
+            "netIncome",
+        # from income statement
+            "totalRevenue",
+            "operatingIncome"
+        ]
+    df = df[target].rename(columns=col_names)
+
+    return df
+
+def plot_financial_history(tickers, clear_cache=1, verbose=False):
+    data={}
+    data["years"]=get_financial_history(tickers, clear_cache=clear_cache, yearly=True, verbose=verbose)
+    data["quarters"]=get_financial_history(tickers, clear_cache=clear_cache, yearly=False, verbose=verbose)
+
+    tickers = data["years"].Ticker.unique()
+
+    sns.set_theme(
+        rc={
+            "axes.titlesize": 16,
+            "axes.labelsize": 14,
+            "font.size": 16,
+            "legend.fontsize": 12,
+        },
+        style="white",
+    )
+
+    n_tick = len(tickers)
+    n_col= n_tick
+    n_row = 4
+
+    width = 3
+    height = 2.5
+
+#    defaultPlotting()
+    fig, axes = plt.subplots(n_row, n_col, figsize=(width * n_col, height * n_row))
+    fig.suptitle("Revenue history ({})".format(today()))
+
+    for key in ["years","quarters"]:
+        data[key]["OCF/revenue"]=data[key]["OCF"]/data[key]["revenue"]
+
+    for col, ticker in enumerate(tickers):
+        for row, key in enumerate(["years","quarters","years","quarters"]):
+            if n_col == 1:
+                ax = axes[row]
+            else:
+                ax = axes[row, col]
+
+            if row <= 1:
+                title = ticker if row == 0 else None
+                _plot_fig(data[key],ax,target=["revenue","OCF","earning"],ylabel="revenue (4 {})".format(key), title=title)
+            else:
+                _plot_fig(data[key],ax,target=["OCF/revenue"],ylabel="OCF/revenue (4 {})".format(key))
+
+    fig.tight_layout()
+    plt.show()
+    return data
 
 def get_all_data(tickers, last=20, table=True):
+    """
+    - run the following
+        1. download EPS history (`get_earnings_history()`))
+        2. download valuation data (`get_valuation_data()`)
+        3. shows the EPS beat ratios in 'last' quarters (`show_beat_ratio()`)
+    - Args:
+        - `tickers`: list of tickers 
+        - `last=20`: number of quarters to be considred to get EPS beat ratio
+        - `table=False`: show the table of EPS beat ratio or not
+    - Returns: tuple of return values of get_earnings_history() and get_valuation_data()
+    """
     # get eps history
     df_earnings = get_earnings_history(tickers)
     # get PSR and others
-    df_tickers = get_valuation_data(tickers)
+    df_tickers = get_valuation(tickers)
 
     table == True and display(show_beat_ratio(df_earnings, last))
     return (df_earnings, df_tickers)

@@ -35,18 +35,7 @@ import importlib
 importlib.reload(mi)
 
 # %% [markdown]
-# ## Get stock info of your favorite
-
-# %% [markdown]
-# ### Find Tickers with high EPS beat ratio
-
-# %%
-# pd.set_option('display.max_rows', df.shape[0]+1)
-tickers_nasdaq = si.tickers_nasdaq()
-ret=mi.search_good_eps(tickers_nasdaq[:10],last=40,threshold=95,min_qtrs=20)
-
-# %% [markdown]
-# ## analyze tech companies
+# ## Tech companies
 
 # %%
 fangam=["FB","AAPL","NFLX","GOOG","AMZN","MSFT"]
@@ -68,36 +57,46 @@ growth2=fintech+media+techs+eauto
 E12 = ["FB", "AAPL", "GOOG", "AMZN", "MSFT"] #Billions
 E11 = ["NFLX", "TSLA","ADBE", "NVDA", "SHOP", "SQ", "ZM"] # over 100 million
 E10_5 = ( # Over 50 million
-    ["CRWD", "TWLO","TWTR"]
-    + [ "DOCU", "ROKU", "ABNB"]
-    + ["GM", "F"]
+    ["ABNB", "GM", "F"] 
+    + ["CRWD", "TWLO","TWTR"]
+    + [ "DOCU"]
 )
-E10_1 = ["EPAM","U", "MGA","ZS","OKTA",  "TTD", "ETSY","FIVN", "PINS"] # over 10 million
+E10_1 = ["ROKU","OKTA", "EPAM","U", "MGA","ZS", "ETSY","FIVN", "PINS"] # over 10 million
 
-E9 = ["FVRR","FSLY"] # over 1 million
+E9 = ["FVRR","FSLY",  "TTD"] # over 1 million
 
 LIST=E12+E11+E10_5+E10_1+E9
 ###
 
-# %%
-mi.plot_valuation(LIST, table=False,key="Cap")
+# %% [markdown]
+# ### PSR distribution and Market Cap
 
 # %%
-df_eps = pd.DataFrame()
-df_psr = pd.DataFrame()
+import importlib
+importlib.reload(mi)
+df=mi.show_valuation(LIST, table=False, key="Cap")
+df["Market Cap"]
+
+# %% [markdown]
+# ### EPS history
+
+# %%
+import importlib
+importlib.reload(mi)
 
 #for i in [fangam, growth1, growth2]:
 for i in [E12,E11,E10_5,E10_1,E9]:
     
-    mi.plot_eps(i)
+    mi.plot_eps_history(i)
+
+# %%
+mi.show_beat_ratio(LIST, last=20)
+for i in [E12,E11,E10_5,E10_1,E9]:
     
-#mi.screening_eps(fangam+growth1+growth2, last=20)
-#df_res = mi.plot_valuation(fangam+growth1+growth2, table=True)
-mi.screening_eps(LIST, last=20)
-df_res = mi.plot_valuation(LIST, table=True)
+    df_res = mi.show_valuation(i, hist=False, table=True)
 
 # %% [markdown]
-# ## FANGAMのみ大きく出してみる
+# ### FANGAMのみ大きく出してみる
 
 # %%
 mi.plot_eps(fangam,largefig=True)
@@ -125,14 +124,32 @@ H_E10 = [
 H_E9 = [
     "INOV",
     "PGNY",
+    "INMD",
+    "DOCS"
 ]
 health = H_E11 + H_E10 + H_E9
 
 # %%
+import importlib
+importlib.reload(mi)
 # EPS history
-mi.plot_eps(health,last=20)
-#mi.search_good_eps(tickers_health)
-df_res=mi.plot_valuation(health,table=True)
-df_cap=mi.plot_valuation(health,table=True,hist=False,key="Cap")
+mi.plot_eps_history(health,last=20)
+
+# %%
+df_res=mi.show_valuation(health,table=True)
+#df_cap=mi.show_valuation(health,table=True,hist=False,key="Cap")
+
+# %% [markdown]
+# ## Get stock info of your favorite
+
+# %% [markdown]
+# ### Find Tickers with high EPS beat ratio
+
+# %%
+# pd.set_option('display.max_rows', df.shape[0]+1)
+tickers_nasdaq = si.tickers_nasdaq()
+ret=mi.search_good_eps(tickers_nasdaq[:10],last=40,threshold=95,min_qtrs=20)
+
+# %%
 
 # %%

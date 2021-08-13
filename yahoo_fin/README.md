@@ -15,7 +15,6 @@ $ pip install yahoo_fin
 
 ## 取り込めるデータ
 
-
 - get [summary](https://finance.yahoo.com/quote/GOOGL?p=GOOGL)
     - `si.get_quote_table(ticker)`
 ```
