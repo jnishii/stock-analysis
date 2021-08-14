@@ -95,7 +95,7 @@ for i in [E12,E11,E10_5,E10_1,E9]:
 # %%
 import importlib
 importlib.reload(mi)
-mi.show_beat_ratio(LIST, last=20)
+#mi.show_beat_ratio(LIST, last=20)
 for i in [E12,E11,E10_5,E10_1,E9]:
     df_res = mi.show_valuation(i, hist=False, table=True)
 

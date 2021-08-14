@@ -391,11 +391,22 @@ def show_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", asc
         plt.xlabel("PSR")
         plt.show()
 
-#    target = numeric + Date
-    target = Cap + Price + Target + PSR + PER + PBR + ROE + QRG  + OCFM # + PM +OM
+    # clickable link in pandas dataframe
+    # https://stackoverflow.com/questions/50209206/clickable-link-in-pandas-dataframe
+    yahoo="https://finance.yahoo.com/quote/"
+    alpha="https://seekingalpha.com/symbol/"
+    TS="https://jp.tradingview.com/chart/?symbol="
 
-    
+    df["Y!"]="Y"+"#"+yahoo+df.index
+    df["alpha"]="a"+"#"+alpha+df.index
+    df["TS"]="TS"+"#"+TS+df.index
+
+
+    #    target = numeric + Date
+    target = Cap + Price + Target + PSR + PER + PBR + ROE + QRG  + OCFM + ["Y!","alpha","TS"]# + PM +OM
     df_tgt = df[target].sort_values(by=key_dct[key], ascending=ascending)
+    df_tgt.to_latex(escape=False)
+
     # https://pandas.pydata.org/pandas-docs/stable/user_guide/style.html
     # pandas 1.3 allows the following style!!
     # df_tgt=df_tgt.style.format(na_rep="-", 
@@ -409,6 +420,11 @@ def show_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", asc
     # http://seaborn.pydata.org/tutorial/color_palettes.html
     cm = sns.color_palette("Blues", as_cmap=True) # seabornのlight_paletteで緑グラデーションオブジェクトを作成
 
+
+    def make_clickable(val):
+        name, url = val.split('#')
+        return f'<a href="{url}">{name}</a>'
+
     def df_styler(df):
         # Pandas style.bar color based on condition?
         # https://stackoverflow.com/questions/57580589/pandas-style-bar-color-based-on-condition
@@ -416,7 +432,7 @@ def show_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", asc
         i_neg = pd.IndexSlice[df.loc[~(df[OCFM[0]]>0.15)].index, OCFM[0]]
         return df.style.format(
             {
-            Cap[0]: "{:3.2e}",  
+            Cap[0]: "{:3.2e}",   
             Price[0]:"{:,.1f}", Target[0]:"{:,.1f}", 
             PSR[0]:"{:,.1f}", PER[0]:"{:,.1f}", PBR[0]:"{:,.1f}", ROE[0]:"{:.1f}%",
             PM[0]: "{:.1f}%", QRG[0]: "{:.1f}%", OM[0]:"{:.1f}%", OCFM[0]:"{:.1%}"}, na_rep="-")\
@@ -426,16 +442,18 @@ def show_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", asc
                 .bar(subset=PER, align='left', vmin=0, color=['#d65f5f', '#bcde93'])\
                 .bar(subset=ROE, align='mid', color=['#d65f5f', '#bcde93'])\
                 .bar(subset=QRG, align='left', vmin=0, color=['#d65f5f', '#ed936b'])\
-                .bar(subset=i_pos, align='left', vmin=0, vmax=.6, color=['#3c76af'])\
-                .bar(subset=i_neg, align='left', vmin=0, vmax=.6, color=['#7eb8ef'])
+                .bar(subset=i_pos, align='left', vmin=0, vmax=.6, color=['#d65f5f', '#3c76af'])\
+                .bar(subset=i_neg, align='left', vmin=0, vmax=.6, color=['#d65f5f', '#7eb8ef'])\
+                .format(make_clickable, subset=["Y!","alpha","TS"])
 #                .bar(subset=OCFM, align='left', vmin=0, vmax=.6, color=['#3c76af'])\
 #                .bar(subset=PM, align='left', vmin=0, color=['#aecde1'])\
 #                .bar(subset=OM, align='left', vmin=0, color=['#3c76af'])\
 
-            
     if table:
         print("{} sorted list ({})".format(key,today()))
-        display(df_styler(df_tgt))
+        result = df_styler(df_tgt)
+        display(result)
+        result.render()
 
     else:
         print("The top 5 {} stocks ({})".format(key,today()))
