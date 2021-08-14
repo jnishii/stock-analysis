@@ -432,29 +432,34 @@ def show_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", asc
         i_neg = pd.IndexSlice[df.loc[~(df[OCFM[0]]>0.15)].index, OCFM[0]]
         return df.style.format(
             {
-            Cap[0]: "{:3.2e}",   
-            Price[0]:"{:,.1f}", Target[0]:"{:,.1f}", 
+            Cap[0]: "${:3.2e}",   
+            Price[0]:"${:,.1f}", Target[0]:"${:,.1f}", 
             PSR[0]:"{:,.1f}", PER[0]:"{:,.1f}", PBR[0]:"{:,.1f}", ROE[0]:"{:.1f}%",
             PM[0]: "{:.1f}%", QRG[0]: "{:.1f}%", OM[0]:"{:.1f}%", OCFM[0]:"{:.1%}"}, na_rep="-")\
-                .highlight_max(subset=Price+Target,axis=1,color='#f4c17b')\
+                .highlight_max(subset=Price+Target,axis=1,color='#fda37b')\
                 .background_gradient(subset=Cap, cmap=cm)\
-                .bar(subset=PSR+PBR, align='left', vmin=0, color=['#d65f5f', '#549e3f'])\
-                .bar(subset=PER, align='left', vmin=0, color=['#d65f5f', '#bcde93'])\
-                .bar(subset=ROE, align='mid', color=['#d65f5f', '#bcde93'])\
-                .bar(subset=QRG, align='left', vmin=0, color=['#d65f5f', '#ed936b'])\
-                .bar(subset=i_pos, align='left', vmin=0, vmax=.6, color=['#d65f5f', '#3c76af'])\
-                .bar(subset=i_neg, align='left', vmin=0, vmax=.6, color=['#d65f5f', '#7eb8ef'])\
+                .bar(subset=PSR+PBR, align='left', vmin=0, color=['#e68f8f', '#549e3f'])\
+                .bar(subset=PER, align='left', vmin=0, color=['#bcde93'])\
+                .bar(subset=ROE, align='mid', color=['#e68f8f', '#bcde93'])\
+                .bar(subset=QRG, align='mid', vmin=min(0,df[QRG[0]].min()), color=['#e68f8f', '#f4d18b'])\
+                .bar(subset=i_pos, align='mid', vmin=min(0,df[OCFM[0]].min()), vmax=.6, color=['#e68f8f', '#3c76af'])\
+                .bar(subset=i_neg, align='mid', vmin=min(0,df[OCFM[0]].min()), vmax=.6, color=['#e68f8f', '#7eb8ef'])\
                 .format(make_clickable, subset=["Y!","alpha","TS"])
 #                .bar(subset=OCFM, align='left', vmin=0, vmax=.6, color=['#3c76af'])\
 #                .bar(subset=PM, align='left', vmin=0, color=['#aecde1'])\
 #                .bar(subset=OM, align='left', vmin=0, color=['#3c76af'])\
 
+    df_result = df_styler(df_tgt)
+    html=df_result.render()
+#    html=df_result.to_html() # pandas >= 1.3.0
+
+    file = open("financials.html","w")
+    file.write(html)
+    file.close()
+
     if table:
         print("{} sorted list ({})".format(key,today()))
-        result = df_styler(df_tgt)
-        display(result)
-        result.render()
-
+        display(df_result)
     else:
         print("The top 5 {} stocks ({})".format(key,today()))
         display(df_styler(df_tgt.head()))

@@ -146,6 +146,9 @@ importlib.reload(mi)
 mi.plot_eps_history(health,last=20)
 
 # %%
+import importlib
+importlib.reload(mi)
+
 df_res=mi.show_valuation(health,table=True)
 #df_cap=mi.show_valuation(health,table=True,hist=False,key="Cap")
 
