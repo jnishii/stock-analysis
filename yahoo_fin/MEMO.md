@@ -48,7 +48,7 @@
 
 主要な情報
 
-- Operating Cash Flows (営業キャッシュフロー) : 売上高から原材料費などの支出を引いた現金収支
+- Operating Cash Flows (営業キャッシュフロー) : 売上高(revenue)から原材料費などの支出を引いた現金収支
 - Investing Cash Flows (投資キャッシュフロー) : 保有資産(土地，株)の売却による入金
 - Financing Cash Flows (財務キャッシュフロー): 借入金や社債発行による入金
 - Net Income from Continuing Operation (当期利益(?) 上の"Income Statement"のNet Income Common Stockholdersと同じ額)
@@ -67,6 +67,23 @@
     - 毎年増えてないといけない。
     - ここまでは1株あたりで評価すると良い
     - 「営業キャッシュフロー/売上高」(営業キャッシュフロー・マージン)が15-30%あること(OCF/revenue)
+        - ODF: https://www.investopedia.com/terms/o/operating-cash-flow-margin.asp
 2. investing cash flows (投資キャッシュフロー) 
 3. financing cash flows (財務キャッシュフロー) 
 - (1,2,3)が(+,-,+)はgood
+
+## そのほか
+- gross profit margin = (revenue - "Cost of goods sold")/revenue
+- operating margin
+    - operating income/revenue
+    - 高いのは大事。倒産しにくい(by 高橋ダン)
+- [profit margin vs operating margin](https://www.investopedia.com/ask/answers/010815/what-difference-between-gross-profit-margin-and-operating-profit-margin.asp)
+- operating cash flow margin
+    - oprating cash flow/revenue
+    - measures how efficiently a company converts sales into cash. It is a good indicator of earnings quality
+    - operating marginには減価償却費が含まれるが，operating cash flow marginには減価償却費などの非現金支出は含まれない
+
+## Yahoo finance での記載
+- profit margin = Net Income Avi to Common/revenue
+
+

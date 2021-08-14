@@ -77,12 +77,15 @@ importlib.reload(mi)
 df=mi.show_valuation(LIST, table=False, key="Cap")
 df["Market Cap"]
 
+# %%
+df.head()
+
 # %% [markdown]
 # ### EPS history
 
 # %%
-import importlib
-importlib.reload(mi)
+# import importlib
+# importlib.reload(mi)
 
 #for i in [fangam, growth1, growth2]:
 for i in [E12,E11,E10_5,E10_1,E9]:
@@ -90,10 +93,17 @@ for i in [E12,E11,E10_5,E10_1,E9]:
     mi.plot_eps_history(i)
 
 # %%
+import importlib
+importlib.reload(mi)
 mi.show_beat_ratio(LIST, last=20)
 for i in [E12,E11,E10_5,E10_1,E9]:
-    
     df_res = mi.show_valuation(i, hist=False, table=True)
+
+# %%
+import importlib
+importlib.reload(mi)
+df_res = mi.show_valuation(LIST, hist=False, table=True)
+df_res = mi.show_valuation(LIST, hist=False, table=True, key="QRG")
 
 # %% [markdown]
 # ### FANGAMのみ大きく出してみる

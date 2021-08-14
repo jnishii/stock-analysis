@@ -362,22 +362,26 @@ def show_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", asc
     PM = col_name(df, "Profit Margin")
     QEG= col_name(df, "Quarterly Earnings Growth (yoy)")
     QRG= col_name(df, "Quarterly Revenue Growth (yoy)")
+    ROE = col_name(df, "Return on Equity (ttm)")
     OM= col_name(df, "Operating Margin (ttm)")
+    OCF= col_name(df, "Operating Cash Flow (ttm)")
+    Revenue = col_name(df, "Revenue (ttm)")
+    OCFM=["Operating Cash Flow Margin(ttm)"]
+  
 
-    key_dct={"PSR":PSR,"PBR":PBR,"PER":PER,"EPS":EPS,"CAP":Cap,"QEG":QEG,"QRG":QRG}
+    key_dct={"PSR":PSR,"PBR":PBR,"PER":PER,"EPS":EPS,"CAP":Cap,"QEG":QEG,"QRG":QRG,"ROE":ROE}
 
     num_dct={"T":12,"B":9,"M":6}
-    for tic in [Cap,PM,QEG,QRG,OM]:
+#    col= [Cap,PM,QEG,QRG,OM,OCF,Revenue]
+    for col in [Cap,PM,QEG,QRG,OM,OCF,ROE,Revenue]:
         for i in num_dct:
-           df[tic] = df[tic].apply(lambda x: x.str.replace(r"{}$".format(i), "e{}".format(num_dct[i]), regex=True))
-        df[tic] = df[tic].apply(lambda x: x.str.replace(r"[,\%$]", "", regex=True))
-    
+           df[col] = df[col].apply(lambda x: x.str.replace(r"{}$".format(i), "e{}".format(num_dct[i]), regex=True))
+        df[col] = df[col].apply(lambda x: x.str.replace(r"[,\%$]", "", regex=True))
+
 #    numeric = Cap + Price + Target + PSR + PER + PBR + PM + QEG + QRG + QM
-    numeric = Cap + Price + Target + PSR + PER + PBR + QRG + PM + OM
+    numeric = Cap + Price + Target + PSR + PER + PBR + QRG + PM + ROE + OM + OCF + Revenue
     df[numeric] = df[numeric].astype("float")
-    #     df[PSR].plot(kind="hist",bins=20)
-    #     plt.xlabel("PSR")
-    #     plt.show()
+    df[OCFM[0]]=df[OCF[0]]/df[Revenue[0]]
 
     if hist:
         defaultPlotting()
@@ -388,7 +392,7 @@ def show_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", asc
         plt.show()
 
 #    target = numeric + Date
-    target = numeric
+    target = Cap + Price + Target + PSR + PER + PBR + ROE + QRG  + OCFM # + PM +OM
 
     
     df_tgt = df[target].sort_values(by=key_dct[key], ascending=ascending)
@@ -406,19 +410,28 @@ def show_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", asc
     cm = sns.color_palette("Blues", as_cmap=True) # seabornのlight_paletteで緑グラデーションオブジェクトを作成
 
     def df_styler(df):
+        # Pandas style.bar color based on condition?
+        # https://stackoverflow.com/questions/57580589/pandas-style-bar-color-based-on-condition
+        i_pos = pd.IndexSlice[df.loc[(df[OCFM[0]]>0.15)].index, OCFM[0]]
+        i_neg = pd.IndexSlice[df.loc[~(df[OCFM[0]]>0.15)].index, OCFM[0]]
         return df.style.format(
             {
             Cap[0]: "{:3.2e}",  
             Price[0]:"{:,.1f}", Target[0]:"{:,.1f}", 
-            PSR[0]:"{:,.1f}", PER[0]:"{:,.1f}", PBR[0]:"{:,.1f}", 
-            PM[0]: "{:.1f}%", QRG[0]: "{:.1f}%", OM[0]: "{:.1f}%"}, na_rep="-")\
+            PSR[0]:"{:,.1f}", PER[0]:"{:,.1f}", PBR[0]:"{:,.1f}", ROE[0]:"{:.1f}%",
+            PM[0]: "{:.1f}%", QRG[0]: "{:.1f}%", OM[0]:"{:.1f}%", OCFM[0]:"{:.1%}"}, na_rep="-")\
                 .highlight_max(subset=Price+Target,axis=1,color='#f4c17b')\
                 .background_gradient(subset=Cap, cmap=cm)\
                 .bar(subset=PSR+PBR, align='left', vmin=0, color=['#d65f5f', '#549e3f'])\
                 .bar(subset=PER, align='left', vmin=0, color=['#d65f5f', '#bcde93'])\
+                .bar(subset=ROE, align='mid', color=['#d65f5f', '#bcde93'])\
                 .bar(subset=QRG, align='left', vmin=0, color=['#d65f5f', '#ed936b'])\
-                .bar(subset=OM, align='left', vmin=0, color=['#3c76af'])\
-                .bar(subset=PM, align='left', vmin=0, color=['#aecde1'])
+                .bar(subset=i_pos, align='left', vmin=0, vmax=.6, color=['#3c76af'])\
+                .bar(subset=i_neg, align='left', vmin=0, vmax=.6, color=['#7eb8ef'])
+#                .bar(subset=OCFM, align='left', vmin=0, vmax=.6, color=['#3c76af'])\
+#                .bar(subset=PM, align='left', vmin=0, color=['#aecde1'])\
+#                .bar(subset=OM, align='left', vmin=0, color=['#3c76af'])\
+
             
     if table:
         print("{} sorted list ({})".format(key,today()))
