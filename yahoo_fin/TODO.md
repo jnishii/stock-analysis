@@ -1,4 +1,8 @@
 
+[] pandas.styleのpdf化
+    - `dataframe_image`を試す
+    - https://stackoverflow.com/questions/45664519/export-pandas-styled-table-to-image-file
+
 [] rename mysotck-info
 [] balance sheet analysis
 
