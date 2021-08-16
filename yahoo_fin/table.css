@@ -1,0 +1,6 @@
+table, td, th {
+border: .5px #444444 solid;
+border-collapse: separate;
+border-spacing: 0px;
+text-align: right;
+}

@@ -55,15 +55,15 @@ growth2=fintech+media+techs+eauto
 
 # %%
 E12 = ["FB", "AAPL", "GOOG", "AMZN", "MSFT"] #Billions
-E11 = ["NFLX", "TSLA","ADBE", "NVDA", "SHOP", "SQ", "ZM"] # over 100 million
+E11 = ["NFLX", "TSLA","ADBE", "NVDA","PYPL", "SHOP", "SQ", "ZM"] # over 100 million
 E10_5 = ( # Over 50 million
     ["ABNB", "GM", "F"] 
     + ["CRWD", "TWLO","TWTR"]
     + [ "DOCU"]
 )
-E10_1 = ["ROKU","OKTA", "EPAM","U", "MGA","ZS", "ETSY","FIVN", "PINS"] # over 10 million
+E10_1 = ["ROKU", "PLTR","OKTA", "EPAM","U", "MGA","ZS", "ETSY","FIVN", "PINS"] # over 10 million
 
-E9 = ["FVRR","FSLY",  "TTD"] # over 1 million
+E9 = ["FVRR","FSLY", "TTD"] # over 1 million
 
 LIST=E12+E11+E10_5+E10_1+E9
 ###
@@ -140,8 +140,8 @@ H_E9 = [
 health = H_E11 + H_E10 + H_E9
 
 # %%
-import importlib
-importlib.reload(mi)
+# import importlib
+# importlib.reload(mi)
 # EPS history
 mi.plot_eps_history(health,last=20)
 
@@ -151,6 +151,12 @@ importlib.reload(mi)
 
 df_res=mi.show_valuation(health,table=True)
 #df_cap=mi.show_valuation(health,table=True,hist=False,key="Cap")
+
+# %%
+#import pandas as pd
+import importlib
+importlib.reload(mi)
+pd.__version__
 
 # %% [markdown]
 # ## Get stock info of your favorite
@@ -164,5 +170,6 @@ tickers_nasdaq = si.tickers_nasdaq()
 ret=mi.search_good_eps(tickers_nasdaq[:10],last=40,threshold=95,min_qtrs=20)
 
 # %%
+# !pip  install pandas==1.3.1
 
 # %%

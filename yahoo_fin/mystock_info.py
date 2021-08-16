@@ -451,7 +451,7 @@ def show_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", asc
 
     df_result = df_styler(df_tgt)
     html=df_result.render()
-#    html=df_result.to_html() # pandas >= 1.3.0
+    #html=df_result.to_html() # pandas >= 1.3.0
 
     file = open("financials.html","w")
     file.write(html)
