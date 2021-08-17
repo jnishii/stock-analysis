@@ -31,6 +31,9 @@ import yahoo_fin.stock_info as si
 import mystock_info as mi
 
 # %%
+# !pip install dataframe_image
+
+# %%
 import importlib
 importlib.reload(mi)
 
@@ -84,8 +87,14 @@ df.head()
 # ### EPS history
 
 # %%
-# import importlib
-# importlib.reload(mi)
+print(type(E12))
+E12.sort()
+print(E12)
+print(E12.sort())
+
+# %%
+import importlib
+importlib.reload(mi)
 
 #for i in [fangam, growth1, growth2]:
 for i in [E12,E11,E10_5,E10_1,E9]:
@@ -103,7 +112,7 @@ for i in [E12,E11,E10_5,E10_1,E9]:
 import importlib
 importlib.reload(mi)
 df_res = mi.show_valuation(LIST, hist=False, table=True)
-df_res = mi.show_valuation(LIST, hist=False, table=True, key="QRG")
+#df_res = mi.show_valuation(LIST, hist=False, table=True, key="QRG")
 
 # %% [markdown]
 # ### FANGAMのみ大きく出してみる
@@ -140,8 +149,11 @@ H_E9 = [
 health = H_E11 + H_E10 + H_E9
 
 # %%
-# import importlib
-# importlib.reload(mi)
+mi.plot_eps_history(["SQ","TSLA"],last=20)
+
+# %%
+import importlib
+importlib.reload(mi)
 # EPS history
 mi.plot_eps_history(health,last=20)
 

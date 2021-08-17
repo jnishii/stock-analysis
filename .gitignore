@@ -9,3 +9,4 @@ cache/
 tmp/
 __pycache__
 .DS_Store
+.bash_history
