@@ -99,9 +99,12 @@ def isnewfile(dfname, clear_cache=1, verbose=False):
 
 
 def get_cache(fname, clear_cache=1, verbose=False):
-# return
-#   object if dfname is a file within `clear_cache` days
-#   None otherwise (no data file)    
+    """read data from cache
+    Returns
+        Object if dfname is a file within `clear_cache` days.
+        None otherwise (no data file).
+    """
+
     if isnewfile(fname, clear_cache=clear_cache, verbose=verbose):
         verbose and print("loading cache data: {}".format(fname))
         obj = load_pickle(fname)
@@ -144,7 +147,15 @@ def get_data(fn, tickers, **kwargs):
 #   plot_eps_history(df_earnings)
 
 def _get_earnings_history(ticker, clear_cache=1, verbose=False):
-# return None if no data is available
+    """
+    Args:
+        ticker(str): Ticker name
+        clear_cache(int): Number of days the cache is valid
+        verbose(bool): verbose mode
+    Returns:
+        dataframe of EPS history
+        None if no data is available
+    """
 
     verbose and print("getting data of {}".format(ticker))
     type="earnings"
@@ -180,6 +191,24 @@ def _get_earnings_history(ticker, clear_cache=1, verbose=False):
 
 
 def get_earnings_history(tickers, clear_cache=1, verbose=False):
+    """gets actual/expected EPS history of tickers
+    
+    This function gets actual/expected EPS history data from cache data if available.
+    If cache is not available, data is obtained from Yahoo Finance and saved 
+    under cache/ as cache data.
+
+    Args:
+        tickers(list or str): Ticker name(s)
+        clear_cache(int): Number of days the cache is valid
+        verbose(bool): verbose mode
+    Returns:
+        dataframe of EPS histories
+
+    Usage:
+        ticker=["AMZN", "APPL"]
+        df_earnings = get_earnings_history(ticker)
+        plot_eps(df_earnings)
+    """
     return get_data(fn=_get_earnings_history, tickers=tickers,clear_cache=clear_cache,verbose=verbose)
 
 def _plot_fig(df, ax, target, title="", ylabel="", xticklabels=True, axhline=None):
@@ -243,8 +272,6 @@ def plot_eps_history(tickers, clear_cache=1, last=20, largefig=False, verbose=Fa
     fig.tight_layout()
     plt.show()
     return(df)
-
-
 
 def _get_valuation(ticker, clear_cache=7, verbose=False):
     """Get valuation data of a `ticker` (str)
