@@ -767,7 +767,7 @@ def get_financial_history(tickers, clear_cache=1, yearly=True, verbose=False):
         "totalCashFromOperatingActivities": "OCF",  # "operating cash flows",
         "totalCashflowsFromInvestingActivities": "ICF",  # "investing cash flows ",
         "totalCashFromFinancingActivities": "FCF",  # "financing cash flows",
-        "netIncome": "earning",  # "net income"
+        "netIncome": "earnings",  # "net income"
         # from income statement
         "totalRevenue": "revenue",
         "operatingIncome": "Operating Income",
@@ -838,7 +838,7 @@ def plot_financial_history(tickers, clear_cache=1, verbose=False):
             title = ticker if row % 4 == 0 else None
             if i%2==0: ax.set_facecolor("#f3ffff")
             if row % 2 == 0:
-                _plot_fig(df_ticker,ax,target=["revenue","OCF","earning"],ylabel="revenue \n(4 {})".format(key), title=title)
+                _plot_fig(df_ticker,ax,target=["revenue","OCF","earnings"],ylabel="revenue \n(4 {})".format(key), title=title)
             else:
                 _plot_fig(df_ticker,ax,target=["OCF/revenue"],ylabel="OCF/revenue \n(4 {})".format(key), xticklabels=True, axhline=0.15)
 
