@@ -1,0 +1,4 @@
+- [The Motley Fool](https://www.fool.com/)
+- [Investing.com](https://www.investing.com/)
+- [FRED](https://fred.stlouisfed.org/)
+- [finviz](https://finviz.com/map.ashx?t=sec)

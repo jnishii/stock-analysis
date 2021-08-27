@@ -99,9 +99,12 @@ def isnewfile(dfname, clear_cache=1, verbose=False):
 
 
 def get_cache(fname, clear_cache=1, verbose=False):
-# return
-#   object if dfname is a file within `clear_cache` days
-#   None otherwise (no data file)    
+    """read data from cache
+    Returns
+        Object if dfname is a file within `clear_cache` days.
+        None otherwise (no data file).
+    """
+
     if isnewfile(fname, clear_cache=clear_cache, verbose=verbose):
         verbose and print("loading cache data: {}".format(fname))
         obj = load_pickle(fname)
@@ -121,6 +124,7 @@ def check_ticker(ticker):
 
 
 def get_data(fn, tickers, **kwargs):
+    tickers.sort()
     if isinstance(tickers, str):
         tickers = [tickers]
 
@@ -129,7 +133,8 @@ def get_data(fn, tickers, **kwargs):
         ticker = ticker.upper()
         tmp = fn(ticker=ticker, **kwargs)
         if tmp is not None and len(tmp) != 0:
-            df = df.append(tmp)
+            tmp=tmp.loc[:,~tmp.columns.duplicated()]# sometimes downloaded df has duplicated columns
+            df = df.append(tmp,ignore_index=True)
 
     return df
 
@@ -142,7 +147,15 @@ def get_data(fn, tickers, **kwargs):
 #   plot_eps_history(df_earnings)
 
 def _get_earnings_history(ticker, clear_cache=1, verbose=False):
-# return None if no data is available
+    """
+    Args:
+        ticker(str): Ticker name
+        clear_cache(int): Number of days the cache is valid
+        verbose(bool): verbose mode
+    Returns:
+        dataframe of EPS history
+        None if no data is available
+    """
 
     verbose and print("getting data of {}".format(ticker))
     type="earnings"
@@ -178,22 +191,46 @@ def _get_earnings_history(ticker, clear_cache=1, verbose=False):
 
 
 def get_earnings_history(tickers, clear_cache=1, verbose=False):
+    """gets actual/expected EPS history of tickers
+    
+    This function gets actual/expected EPS history data from cache data if available.
+    If cache is not available, data is obtained from Yahoo Finance and saved 
+    under cache/ as cache data.
+
+    Args:
+        tickers(list or str): Ticker name(s)
+        clear_cache(int): Number of days the cache is valid
+        verbose(bool): verbose mode
+    Returns:
+        dataframe of EPS histories
+
+    Usage:
+        ticker=["AMZN", "APPL"]
+        df_earnings = get_earnings_history(ticker)
+        plot_eps(df_earnings)
+    """
     return get_data(fn=_get_earnings_history, tickers=tickers,clear_cache=clear_cache,verbose=verbose)
 
-def _plot_fig(df, ax, target, title="", ylabel=""):
+def _plot_fig(df, ax, target, title="", ylabel="", xticklabels=True, axhline=None):
+    """
+    axhline (float) : draw horizontal line at given values
+    """
     sns.lineplot(ax=ax, data=df[target], marker="o")
+    ax.axhline(linewidth=1, linestyle="-")
+    axhline != None and ax.axhline(y=axhline,linewidth=1, linestyle="--", color="red")
     ax.set_title(title)
-    ax.tick_params(axis="x", labelrotation=90)
-    ax.axhline(linewidth=1, linestyle="--")
+    ax.tick_params(axis="x", labelrotation=45)
     ax.set_xlabel("")
     ax.set_ylabel(ylabel)
     ax.legend(title='')
     ax.set_xticks(df.index)
-    ax.set_xticklabels(df.index.strftime("%Y-%m"))
+    if xticklabels: 
+        ax.set_xticklabels(df.index.strftime("%Y-%m"))
+    else:
+        ax.set_xticklabels([])
 #    ax.xaxis.set_major_locator(plt.MaxNLocator(len(df)))
 
 def plot_eps_history(tickers, clear_cache=1, last=20, largefig=False, verbose=False):
-
     df=get_earnings_history(tickers, clear_cache=clear_cache, verbose=verbose)
     tickers = df.ticker.unique()
     n_tick = len(tickers)
@@ -208,10 +245,10 @@ def plot_eps_history(tickers, clear_cache=1, last=20, largefig=False, verbose=Fa
         max_col = 4
 
     n_tick = len(tickers)
-#    n_col = min(n_tick, max_col)
+    #n_col = min(n_tick, max_col)
     n_col = max_col
     n_row = (n_tick - 1) // max_col + 1
-    print("ntick: {}, nrow: {}, ncol: {}".format(n_tick, n_row, n_col))
+    #print("ntick: {}, nrow: {}, ncol: {}".format(n_tick, n_row, n_col))
 
     defaultPlotting()
     fig, axes = plt.subplots(n_row, n_col, figsize=(width * n_col, height * n_row))
@@ -235,8 +272,6 @@ def plot_eps_history(tickers, clear_cache=1, last=20, largefig=False, verbose=Fa
     fig.tight_layout()
     plt.show()
     return(df)
-
-
 
 def _get_valuation(ticker, clear_cache=7, verbose=False):
     """Get valuation data of a `ticker` (str)
@@ -451,11 +486,15 @@ def show_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", asc
 
     df_result = df_styler(df_tgt)
     html=df_result.render()
-#    html=df_result.to_html() # pandas >= 1.3.0
+    #html=df_result.to_html() # pandas >= 1.3.0
+    import dataframe_image as dfi
 
     file = open("financials.html","w")
     file.write(html)
     file.close()
+    # dfi.export(html, 'financial.pdf')
+    # dfi.export(html, 'financial.png')
+
 
     if table:
         print("{} sorted list ({})".format(key,today()))
@@ -681,9 +720,9 @@ def _get_financial_history(ticker, clear_cache=1, yearly=True, verbose=False):
         save_pickle(dfname=dfname, obj=None)
         return None
 
-    df=df.T.astype("float").sort_index()
+    df=df.T.astype("float").reset_index()#.sort_index()
+    df.index.name = None
     df["ticker"] = ticker
-
     save_pickle(dfname=dfname, obj=df)
 
     return df
@@ -722,6 +761,7 @@ def get_financial_history(tickers, clear_cache=1, yearly=True, verbose=False):
 
     """
     col_names = {
+        "endDate": "date",
         "ticker" : "ticker",
         # from cash flow
         "totalCashFromOperatingActivities": "OCF",  # "operating cash flows",
@@ -736,6 +776,7 @@ def get_financial_history(tickers, clear_cache=1, yearly=True, verbose=False):
 
     df = get_data(fn=_get_financial_history,tickers=tickers,clear_cache=clear_cache,verbose=verbose,yearly=yearly)
     target= [
+            "endDate",
             "ticker",
         # from cash flow
             "totalCashFromOperatingActivities",
@@ -746,7 +787,7 @@ def get_financial_history(tickers, clear_cache=1, yearly=True, verbose=False):
             "totalRevenue",
             "operatingIncome"
         ]
-    df = df[target].rename(columns=col_names)
+    df = df[target].rename(columns=col_names).set_index("date").sort_index()
 
     return df
 
@@ -755,44 +796,51 @@ def plot_financial_history(tickers, clear_cache=1, verbose=False):
     data["years"]=get_financial_history(tickers, clear_cache=clear_cache, yearly=True, verbose=verbose)
     data["quarters"]=get_financial_history(tickers, clear_cache=clear_cache, yearly=False, verbose=verbose)
 
-    tickers = data["years"].Ticker.unique()
-
+    tickers = data["years"].ticker.unique()
+    #tickers.sort()
+        
     sns.set_theme(
         rc={
-            "axes.titlesize": 16,
+            "axes.titlesize": 20,
             "axes.labelsize": 14,
             "font.size": 16,
-            "legend.fontsize": 12,
+            "legend.fontsize": 10,
         },
         style="white",
     )
 
-    n_tick = len(tickers)
-    n_col= n_tick
-    n_row = 4
-
-    width = 3
+    width = 3.5
     height = 2.5
-
+    max_col = 5
+    
+    n_tick = len(tickers)
+#    n_col = min(n_tick, max_col)
+    n_col = max_col
+    n_row = (n_tick - 1) // max_col + 1
+    print("ntick: {}, nrow: {}, ncol: {}".format(n_tick, n_row, n_col))
+    
 #    defaultPlotting()
-    fig, axes = plt.subplots(n_row, n_col, figsize=(width * n_col, height * n_row))
+    fig, axes = plt.subplots(n_row*4, n_col, figsize=(width * n_col, height * n_row * 4))
     fig.suptitle("Revenue history ({})".format(today()))
 
     for key in ["years","quarters"]:
         data[key]["OCF/revenue"]=data[key]["OCF"]/data[key]["revenue"]
 
-    for col, ticker in enumerate(tickers):
-        for row, key in enumerate(["years","quarters","years","quarters"]):
-            if n_col == 1:
-                ax = axes[row]
-            else:
-                ax = axes[row, col]
+    for i, ticker in enumerate(tickers):
+        for j, key in enumerate(["years","years","quarters","quarters"]):
+            df_ticker=data[key]
+            df_ticker=df_ticker[df_ticker["ticker"]==ticker]
 
-            if row <= 1:
-                title = ticker if row == 0 else None
-                _plot_fig(data[key],ax,target=["revenue","OCF","earning"],ylabel="revenue (4 {})".format(key), title=title)
+            row = 4*(i // n_col)+j
+            col = i % n_col
+            ax = axes[row, col]
+
+            title = ticker if row % 4 == 0 else None
+            if i%2==0: ax.set_facecolor("#f3ffff")
+            if row % 2 == 0:
+                _plot_fig(df_ticker,ax,target=["revenue","OCF","earning"],ylabel="revenue \n(4 {})".format(key), title=title)
             else:
-                _plot_fig(data[key],ax,target=["OCF/revenue"],ylabel="OCF/revenue (4 {})".format(key))
+                _plot_fig(df_ticker,ax,target=["OCF/revenue"],ylabel="OCF/revenue \n(4 {})".format(key), xticklabels=True, axhline=0.15)
 
     fig.tight_layout()
     plt.show()

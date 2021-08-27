@@ -31,6 +31,9 @@ import yahoo_fin.stock_info as si
 import mystock_info as mi
 
 # %%
+# !pip install dataframe_image
+
+# %%
 import importlib
 importlib.reload(mi)
 
@@ -55,15 +58,15 @@ growth2=fintech+media+techs+eauto
 
 # %%
 E12 = ["FB", "AAPL", "GOOG", "AMZN", "MSFT"] #Billions
-E11 = ["NFLX", "TSLA","ADBE", "NVDA", "SHOP", "SQ", "ZM"] # over 100 million
+E11 = ["NFLX", "TSLA","ADBE", "NVDA","PYPL", "SHOP", "SQ", "ZM"] # over 100 million
 E10_5 = ( # Over 50 million
     ["ABNB", "GM", "F"] 
     + ["CRWD", "TWLO","TWTR"]
     + [ "DOCU"]
 )
-E10_1 = ["ROKU","OKTA", "EPAM","U", "MGA","ZS", "ETSY","FIVN", "PINS"] # over 10 million
+E10_1 = ["ROKU", "PLTR","OKTA", "EPAM","U", "MGA","ZS", "ETSY","FIVN", "PINS"] # over 10 million
 
-E9 = ["FVRR","FSLY",  "TTD"] # over 1 million
+E9 = ["FVRR","FSLY", "TTD"] # over 1 million
 
 LIST=E12+E11+E10_5+E10_1+E9
 ###
@@ -84,8 +87,14 @@ df.head()
 # ### EPS history
 
 # %%
-# import importlib
-# importlib.reload(mi)
+print(type(E12))
+E12.sort()
+print(E12)
+print(E12.sort())
+
+# %%
+import importlib
+importlib.reload(mi)
 
 #for i in [fangam, growth1, growth2]:
 for i in [E12,E11,E10_5,E10_1,E9]:
@@ -103,7 +112,7 @@ for i in [E12,E11,E10_5,E10_1,E9]:
 import importlib
 importlib.reload(mi)
 df_res = mi.show_valuation(LIST, hist=False, table=True)
-df_res = mi.show_valuation(LIST, hist=False, table=True, key="QRG")
+#df_res = mi.show_valuation(LIST, hist=False, table=True, key="QRG")
 
 # %% [markdown]
 # ### FANGAMのみ大きく出してみる
@@ -140,6 +149,9 @@ H_E9 = [
 health = H_E11 + H_E10 + H_E9
 
 # %%
+mi.plot_eps_history(["SQ","TSLA"],last=20)
+
+# %%
 import importlib
 importlib.reload(mi)
 # EPS history
@@ -151,6 +163,12 @@ importlib.reload(mi)
 
 df_res=mi.show_valuation(health,table=True)
 #df_cap=mi.show_valuation(health,table=True,hist=False,key="Cap")
+
+# %%
+#import pandas as pd
+import importlib
+importlib.reload(mi)
+pd.__version__
 
 # %% [markdown]
 # ## Get stock info of your favorite
@@ -164,5 +182,6 @@ tickers_nasdaq = si.tickers_nasdaq()
 ret=mi.search_good_eps(tickers_nasdaq[:10],last=40,threshold=95,min_qtrs=20)
 
 # %%
+# !pip  install pandas==1.3.1
 
 # %%
