@@ -353,6 +353,9 @@ def get_valuation(tickers, clear_cache=7, verbose=False):
          'Trailing P/E', 'Forward P/E 1', 'PEG Ratio (5 yr expected) 1',
          'Price/Sales (ttm)', 'Price/Book (mrq)', 
          'Enterprise Value/Revenue 3', 'Enterprise Value/EBITDA 7']
+         Notice(2021/8/29):
+            - si.get_stats_valuation() returns histories of Market Cap, Enterprise Value and Trailing P/E
+            - Did the return value change?
     and combine the results.
     """
     df = get_data(fn=_get_valuation,tickers=tickers,clear_cache=clear_cache,verbose=verbose)
