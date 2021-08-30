@@ -406,8 +406,8 @@ def show_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", asc
 
     key_dct={"PSR":PSR,"PBR":PBR,"PER":PER,"EPS":EPS,"CAP":Cap,"QEG":QEG,"QRG":QRG,"ROE":ROE}
 
-    num_dct={"T":12,"B":9,"M":6}
-#    col= [Cap,PM,QEG,QRG,OM,OCF,Revenue]
+  num_dct={"T":12,"B":9,"M":6,"k":3}
+  #    col= [Cap,PM,QEG,QRG,OM,OCF,Revenue]
     for col in [Cap,PM,QEG,QRG,OM,OCF,ROE,Revenue]:
         for i in num_dct:
            df[col] = df[col].apply(lambda x: x.str.replace(r"{}$".format(i), "e{}".format(num_dct[i]), regex=True))
