@@ -11,14 +11,90 @@
 
 取得関数
 - si.get_quote_table()
-- mi.get_valuation() (以下のstatics情報とともに取得)
+```python
+> print(dct_qt.keys())
+dict_keys(['1y Target Est', '52 Week Range', 'Ask', 'Avg. Volume', 'Beta (5Y Monthly)', 'Bid', "Day's Range", 'EPS (TTM)', 'Earnings Date', 'Ex-Dividend Date', 'Forward Dividend & Yield', 'Market Cap', 'Open', 'PE Ratio (TTM)', 'Previous Close', 'Quote Price', 'Volume'])
+```
+
+- si.get_valuation() (以下のstatics情報とともに取得)
 
 ## Yahoo financeのstatistics情報
 - https://finance.yahoo.com/quote/NFLX/key-statistics?p=NFLX
 
 取得関数
 
-- i.get_stats_valuation()
+- si.get_stats()
+```
+['Beta (5Y Monthly)',
+ '52-Week Change 3',
+ 'S&P500 52-Week Change 3',
+ '52 Week High 3',
+ '52 Week Low 3',
+ '50-Day Moving Average 3',
+ '200-Day Moving Average 3',
+ 'Avg Vol (3 month) 3',
+ 'Avg Vol (10 day) 3',
+ 'Shares Outstanding 5',
+ 'Implied Shares Outstanding 6',
+ 'Float',
+ '% Held by Insiders 1',
+ '% Held by Institutions 1',
+ 'Shares Short (Aug 12, 2021) 4',
+ 'Short Ratio (Aug 12, 2021) 4',
+ 'Short % of Float (Aug 12, 2021) 4',
+ 'Short % of Shares Outstanding (Aug 12, 2021) 4',
+ 'Shares Short (prior month Jul 14, 2021) 4',
+ 'Forward Annual Dividend Rate 4',
+ 'Forward Annual Dividend Yield 4',
+ 'Trailing Annual Dividend Rate 3',
+ 'Trailing Annual Dividend Yield 3',
+ '5 Year Average Dividend Yield 4',
+ 'Payout Ratio 4',
+ 'Dividend Date 3',
+ 'Ex-Dividend Date 4',
+ 'Last Split Factor 2',
+ 'Last Split Date 3',
+ 'Fiscal Year Ends',
+ 'Most Recent Quarter (mrq)',
+ 'Profit Margin',
+ 'Operating Margin (ttm)',
+ 'Return on Assets (ttm)',
+ 'Return on Equity (ttm)',
+ 'Revenue (ttm)',
+ 'Revenue Per Share (ttm)',
+ 'Quarterly Revenue Growth (yoy)',
+ 'Gross Profit (ttm)',
+ 'EBITDA',
+ 'Net Income Avi to Common (ttm)',
+ 'Diluted EPS (ttm)',
+ 'Quarterly Earnings Growth (yoy)',
+ 'Total Cash (mrq)',
+ 'Total Cash Per Share (mrq)',
+ 'Total Debt (mrq)',
+ 'Total Debt/Equity (mrq)',
+ 'Current Ratio (mrq)',
+ 'Book Value Per Share (mrq)',
+ 'Operating Cash Flow (ttm)',
+ 'Levered Free Cash Flow (ttm)']
+ ```
+- si.get_stats_valuation()
+```python
+> print(df.columns)
+Index(['Unnamed: 0', 'As of Date: 8/29/2021Current', '6/30/2021', '3/31/2021',
+       '12/31/2020', '9/30/2020', '6/30/2020'],
+> list(df['Unnamed: 0'])
+```python
+RangeIndex(start=0, stop=9, step=1)
+['Market Cap (intraday) 5',
+ 'Enterprise Value 3',
+ 'Trailing P/E',
+ 'Forward P/E 1',
+ 'PEG Ratio (5 yr expected) 1',
+ 'Price/Sales (ttm)',
+ 'Price/Book (mrq)',
+ 'Enterprise Value/Revenue 3',
+ 'Enterprise Value/EBITDA 7']
+```       
 - mi.get_valuation() (以下のstatics情報とともに取得)
 
 
@@ -30,7 +106,19 @@
 取得関数
 - si.get_revenue() <= こちらの利用はやめる
 - si.get_income_statement(ticker, yearly = True)
-
+```
+> df.columns
+DatetimeIndex(['2020-12-31', '2019-12-31', '2018-12-31', '2017-12-31'], dtype='datetime64[ns]', name='endDate', freq=None)
+> df.index
+Index(['researchDevelopment', 'effectOfAccountingCharges', 'incomeBeforeTax',
+       'minorityInterest', 'netIncome', 'sellingGeneralAdministrative',
+       'grossProfit', 'ebit', 'operatingIncome', 'otherOperatingExpenses',
+       'interestExpense', 'extraordinaryItems', 'nonRecurring', 'otherItems',
+       'incomeTaxExpense', 'totalRevenue', 'totalOperatingExpenses',
+       'costOfRevenue', 'totalOtherIncomeExpenseNet', 'discontinuedOperations',
+       'netIncomeFromContinuingOps', 'netIncomeApplicableToCommonShares'],
+      dtype='object', name='Breakdown')
+```      
 主要な情報
 - Total revenue (売上高, totalRevenue) : revenue
 - Operating Income (営業利益, operatingIncome)

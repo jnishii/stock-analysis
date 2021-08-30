@@ -1,3 +1,5 @@
+.DS_Store
+.bash_history
 .cache/
 .config/
 .ipynb_checkpoints
@@ -5,8 +7,7 @@
 .jupyter/
 .lesshst
 .local/
-cache/
-tmp/
 __pycache__
-.DS_Store
-.bash_history
+tmp/
+cache/
+
