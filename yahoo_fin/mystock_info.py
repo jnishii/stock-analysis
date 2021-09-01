@@ -404,6 +404,7 @@ def show_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", asc
     OM= col_name(df, "Operating Margin (ttm)")
     OCF= col_name(df, "Operating Cash Flow (ttm)")
     Revenue = col_name(df, "Revenue (ttm)")
+    NShares = (df,'Shares Outstanding 5')
     OCFM=["Operating Cash Flow Margin(ttm)"]
   
 
@@ -761,7 +762,6 @@ def get_financial_history(tickers, clear_cache=1, yearly=True, verbose=False):
        'incomeTaxExpense', 'totalRevenue', 'totalOperatingExpenses',
        'costOfRevenue', 'totalOtherIncomeExpenseNet', 'discontinuedOperations',
        'netIncomeFromContinuingOps', 'netIncomeApplicableToCommonShares']
-
     """
     col_names = {
         "endDate": "date",
@@ -771,6 +771,7 @@ def get_financial_history(tickers, clear_cache=1, yearly=True, verbose=False):
         "totalCashflowsFromInvestingActivities": "ICF",  # "investing cash flows ",
         "totalCashFromFinancingActivities": "FCF",  # "financing cash flows",
         "netIncome": "earnings",  # "net income"
+        "netIncomeApplicableToCommonShares":"earnings (AVI)",
         # from income statement
         "totalRevenue": "revenue",
         "operatingIncome": "Operating Income",
@@ -827,7 +828,7 @@ def plot_financial_history(tickers, clear_cache=1, verbose=False):
     fig.suptitle("Revenue history ({})".format(today()))
 
     for key in ["years","quarters"]:
-        data[key]["OCF/revenue"]=data[key]["OCF"]/data[key]["revenue"]
+        data[key]["OCF/revenue"]=data[key]["OCF"]/data[key]["revenue (AVI)"]
 
     for i, ticker in enumerate(tickers):
         for j, key in enumerate(["years","years","quarters","quarters"]):
@@ -841,7 +842,8 @@ def plot_financial_history(tickers, clear_cache=1, verbose=False):
             title = ticker if row % 4 == 0 else None
             if i%2==0: ax.set_facecolor("#f3ffff")
             if row % 2 == 0:
-                _plot_fig(df_ticker,ax,target=["revenue","OCF","earnings"],ylabel="revenue \n(4 {})".format(key), title=title)
+#                _plot_fig(df_ticker,ax,target=["revenue","OCF","earnings","earnings (AVI)"],ylabel="revenue \n(4 {})".format(key), title=title)
+                _plot_fig(df_ticker,ax,target=["revenue","OCF","earnings (AVI)"],ylabel="revenue \n(4 {})".format(key), title=title)
             else:
                 _plot_fig(df_ticker,ax,target=["OCF/revenue"],ylabel="OCF/revenue \n(4 {})".format(key), xticklabels=True, axhline=0.15)
 
