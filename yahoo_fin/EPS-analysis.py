@@ -31,9 +31,6 @@ import yahoo_fin.stock_info as si
 import mystock_info as mi
 
 # %%
-# #!pip install dataframe_image
-
-# %%
 import importlib
 importlib.reload(mi)
 
@@ -58,20 +55,20 @@ growth2=fintech+media+techs+eauto
 
 # %%
 E12 = ["FB", "AAPL", "GOOG", "AMZN", "MSFT"] # Trillion
-E11 = ["NFLX", "TSLA","ADBE", "NVDA","PYPL", "SHOP", "SQ", "ZM"] # over 100 Billion
+E11 = ["NFLX", "TSLA","ADBE", "NVDA","PYPL", "SHOP", "SQ"] # over 100 Billion
 E10_5 = ( # Over 50 Billion
-    ["ABNB", "GM", "F"] 
+    ["ABNB","SNOW", "ZM"]  #, "GM", "F"
     + ["CRWD", "TWLO","TWTR"]
-    + [ "DOCU"]
+    + [ "DOCU", "PLTR"]
 )
-E10_1 = ["ROKU", "PLTR","OKTA", "EPAM","U", "MGA","ZS", "ETSY","FIVN", "PINS", "HUBS"] # over 10 Billion
+E10_1 = ["ROKU", "OKTA", "DDOG", "EPAM","TTD","U", "MGA","ZS", "ETSY","FIVN", "PINS","MDB", "HUBS"] # over 10 Billion
 
-E9 = ["FVRR","FSLY", "TTD"] # over 1 Billion
+E9 = ["FVRR"] # over 1 Billion
 
 LIST=E12+E11+E10_5+E10_1+E9
-###
+SLIST=E11+E10_5+E10_1+E9
 
-# %%
+###
 
 # %% [markdown]
 # ### PSR distribution and Market Cap
@@ -80,19 +77,13 @@ LIST=E12+E11+E10_5+E10_1+E9
 import importlib
 importlib.reload(mi)
 df=mi.show_valuation(LIST, table=False, key="Cap")
-df["Market Cap"]
+#df["Market Cap"].sort_values(ascending=False)
 
 # %%
 df.head()
 
 # %% [markdown]
 # ### EPS history
-
-# %%
-print(type(E12))
-E12.sort()
-print(E12)
-print(E12.sort())
 
 # %%
 import importlib
@@ -102,6 +93,9 @@ importlib.reload(mi)
 for i in [E12,E11,E10_5,E10_1,E9]:
     
     mi.plot_eps_history(i)
+
+# %%
+mi.plot_eps_history(E9)
 
 # %%
 import importlib
@@ -114,7 +108,7 @@ for i in [E12,E11,E10_5,E10_1,E9]:
 import importlib
 importlib.reload(mi)
 #df_res = mi.show_valuation(LIST, hist=False, table=True)
-df_res = mi.show_valuation(LIST, hist=False, table=True, key="QRG")
+df_res = mi.show_valuation(SLIST, hist=False, table=True, key="PSR")
 
 # %% [markdown]
 # ### FANGAMのみ大きく出してみる
@@ -124,7 +118,7 @@ mi.plot_eps(fangam,largefig=True)
 mi.search_good_eps(fangam, last=200)
 
 # %% [markdown]
-# ## Health
+# ## Health/Bio
 
 # %%
 H_E11 = [
