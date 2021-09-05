@@ -788,9 +788,11 @@ def get_financial_history(tickers, clear_cache=1, yearly=True, verbose=False):
             "netIncome",
         # from income statement
             "totalRevenue",
-            "operatingIncome"
+            "operatingIncome",
+            "netIncomeApplicableToCommonShares"
         ]
     df = df[target].rename(columns=col_names).set_index("date").sort_index()
+    print(df.columns)
 
     return df
 
@@ -827,7 +829,7 @@ def plot_financial_history(tickers, clear_cache=1, verbose=False):
     fig.suptitle("Revenue history ({})".format(today()))
 
     for key in ["years","quarters"]:
-        data[key]["OCF/revenue"]=data[key]["OCF"]/data[key]["revenue (AVI)"]
+        data[key]["OCF/revenue"]=data[key]["OCF"]/data[key]["revenue"]
 
     for i, ticker in enumerate(tickers):
         for j, key in enumerate(["years","years","quarters","quarters"]):
