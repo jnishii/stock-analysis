@@ -61,7 +61,8 @@ E10_5 = ( # Over 50 Billion
     + ["CRWD", "TWLO","TWTR"]
     + [ "DOCU", "PLTR"]
 )
-E10_1 = ["ROKU", "OKTA", "DDOG", "EPAM","TTD","U", "MGA","ZS", "ETSY","FIVN", "PINS","MDB", "HUBS"] # over 10 Billion
+E10_1 = ["ROKU", "OKTA", "DDOG", "EPAM","TTD","U", "MGA","ZS", 
+         "ETSY","FIVN", "PINS","UPST","MDB", "HUBS", "NUE"] # over 10 Billion
 
 E9 = ["FVRR"] # over 1 Billion
 
@@ -80,7 +81,7 @@ df=mi.show_valuation(LIST, table=False, key="Cap")
 #df["Market Cap"].sort_values(ascending=False)
 
 # %%
-df.head()
+df["Market Cap"].sort_values(ascending=False)
 
 # %% [markdown]
 # ### EPS history
