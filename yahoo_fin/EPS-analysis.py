@@ -42,34 +42,38 @@ fangam=["FB","AAPL","NFLX","GOOG","AMZN","MSFT"]
 
 ###
 ant=["ADBE","NVDA","TSLA"]
-saas=["CRWD","OKTA","ZS","TTD","TWLO"]
+saas=["CRWD","OKTA","TTD","TWLO"]
 ecommerce=["SHOP","ETSY","FIVN"]
 
 fintech=["SQ","DOCU", "PYPL"]
 media=["TWTR","PINS"]
 techs=["U","ZM","FVRR","ABNB","ROKU"]
-eauto=["F","GM","MGA"]
+eauto=["F","GM"]
+
+jicchama=["DOCS","UPST","DLO","SNOW","PLTR","DDOG","COUR","ABNB","LAW"]
 
 growth1=ant+saas+ecommerce
 growth2=fintech+media+techs+eauto
 
 # %%
-E12 = ["FB", "AAPL", "GOOG", "AMZN", "MSFT"] # Trillion
-E11 = ["NFLX", "TSLA","ADBE", "NVDA","PYPL", "SHOP", "SQ"] # over 100 Billion
-E10_5 = ( # Over 50 Billion
-    ["ABNB","SNOW", "ZM"]  #, "GM", "F"
-    + ["CRWD", "TWLO","TWTR"]
-    + [ "DOCU", "PLTR"]
-)
-E10_1 = ["ROKU", "OKTA", "DDOG", "EPAM","TTD","U", "MGA","ZS", 
-         "ETSY","FIVN", "PINS","UPST","MDB", "HUBS", "NUE"] # over 10 Billion
+E12 = ["AAPL", "GOOG", "AMZN", "MSFT","TSLA"] # Trillion
+E11 = ["NVDA", "FB","NFLX", "ADBE","PYPL", "SHOP", "ABNB"] # over 100 Billion
+E10_5 = ["DDOG","ZM", "SQ", "SNOW"]  #, "GM", "F"  # Over 50 Billion
+E10_1 = ["VEEV", "PLTR","TWTR","ROKU", "OKTA", "EPAM", "TTD","U", "MGA",
+         "ETSY","PINS","UPST","MDB", "HUBS"] + ["CRWD", "TWLO", "DOCU" ]#,"LCID"]
+# over 10 Billion
 
-E9 = ["FVRR"] # over 1 Billion
+E9 = ["FIVN",  "MQ", "FVRR","COUR","LAW","SPT", "ONON"] # Under 1 Billion
+
+#NODATA=["DLO"]
 
 LIST=E12+E11+E10_5+E10_1+E9
 SLIST=E11+E10_5+E10_1+E9
 
 ###
+
+# %%
+sorted(LIST)
 
 # %% [markdown]
 # ### PSR distribution and Market Cap
@@ -78,7 +82,6 @@ SLIST=E11+E10_5+E10_1+E9
 import importlib
 importlib.reload(mi)
 df=mi.show_valuation(LIST, table=False, key="Cap")
-#df["Market Cap"].sort_values(ascending=False)
 
 # %%
 df["Market Cap"].sort_values(ascending=False)
@@ -92,24 +95,12 @@ importlib.reload(mi)
 
 #for i in [fangam, growth1, growth2]:
 for i in [E12,E11,E10_5,E10_1,E9]:
-    
+#for i in [E12,E11,E10_5,E10_1]:
     mi.plot_eps_history(i)
+    mi.show_valuation(i, hist=False, table=True, key="PSR")    
 
 # %%
-mi.plot_eps_history(E9)
-
-# %%
-import importlib
-importlib.reload(mi)
-#mi.show_beat_ratio(LIST, last=20)
-for i in [E12,E11,E10_5,E10_1,E9]:
-    df_res = mi.show_valuation(i, hist=False, table=True)
-
-# %%
-import importlib
-importlib.reload(mi)
-#df_res = mi.show_valuation(LIST, hist=False, table=True)
-df_res = mi.show_valuation(SLIST, hist=False, table=True, key="PSR")
+ret=mi.plot_eps_history(jicchama)
 
 # %% [markdown]
 # ### FANGAMのみ大きく出してみる
@@ -117,6 +108,16 @@ df_res = mi.show_valuation(SLIST, hist=False, table=True, key="PSR")
 # %%
 mi.plot_eps(fangam,largefig=True)
 mi.search_good_eps(fangam, last=200)
+
+# %% [markdown]
+# ## Energy
+
+# %%
+ENE=["STNG","HLX","FANG","PXD","AR","XOM","SLB","TNP","EURN","CVX"]
+df_res=mi.plot_eps_history(ENE,last=20)
+
+# %%
+df_res=mi.show_valuation(ENE,table=True)
 
 # %% [markdown]
 # ## Health/Bio
@@ -140,8 +141,10 @@ H_E10 = [
 H_E9 = [
     "INOV",
     "PGNY",
+    "RGEN",
     "INMD",
-    "DOCS"
+    "DOCS",
+    "MRK"
 ]
 health = H_E11 + H_E10 + H_E9
 
@@ -157,6 +160,15 @@ importlib.reload(mi)
 
 df_res=mi.show_valuation(health,table=True)
 #df_cap=mi.show_valuation(health,table=True,hist=False,key="Cap")
+
+# %% [markdown]
+# ## バリュー株
+
+# %%
+MINE=["RIO","VALE"]
+
+VALUE=["AOS","CTAS","COST","EURN","HD","KO","LOW","NUE","UNP","TGT","XMTR","W"]#,"HIMS"]
+df_res=mi.show_valuation(VALUE,table=True)
 
 # %% [markdown]
 # # VUGとIWFの組入銘柄（570銘柄）の優良銘柄
