@@ -5,6 +5,9 @@ import seaborn as sns
 import pickle
 import time
 
+#from IPython.core.display import display
+from IPython.display import display
+
 import os.path, time
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -134,7 +137,9 @@ def get_data(fn, tickers, **kwargs):
         tmp = fn(ticker=ticker, **kwargs)
         if tmp is not None and len(tmp) != 0:
             tmp=tmp.loc[:,~tmp.columns.duplicated()]# sometimes downloaded df has duplicated columns
-            df = df.append(tmp,ignore_index=True)
+            #df = df.append(tmp,ignore_index=True)
+            df = pd.concat([df,tmp],ignore_index=True)
+
 
     return df
 
@@ -442,9 +447,10 @@ def show_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", asc
 
 
     #    target = numeric + Date
-    target = Cap + Price + Target + PSR + PER + PBR + ROE + QRG  + OCFM + ["Y!","alpha","TS"]# + PM +OM
+    target = Cap + Price + Target + PSR + PER + PBR + ROE + QRG  + OCFM + ["Y!","alpha","TS"] #+ PM +OM
     df_tgt = df[target].sort_values(by=key_dct[key], ascending=ascending)
-    df_tgt.to_latex(escape=False)
+    #df_tgt.to_latex(escape=False)
+    df_tgt.style.to_latex()
 
     # https://pandas.pydata.org/pandas-docs/stable/user_guide/style.html
     # pandas 1.3 allows the following style!!
@@ -467,6 +473,7 @@ def show_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", asc
     def df_styler(df):
         # Pandas style.bar color based on condition?
         # https://stackoverflow.com/questions/57580589/pandas-style-bar-color-based-on-condition
+        #print(df.head())
         i_pos = pd.IndexSlice[df.loc[(df[OCFM[0]]>0.15)].index, OCFM[0]]
         i_neg = pd.IndexSlice[df.loc[~(df[OCFM[0]]>0.15)].index, OCFM[0]]
         return df.style.format(
@@ -478,24 +485,25 @@ def show_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", asc
                 .highlight_max(subset=Price+Target,axis=1,color='#fda37b')\
                 .background_gradient(subset=Cap, cmap=cm)\
                 .bar(subset=PSR+PBR, align='left', vmin=0, color=['#e68f8f', '#549e3f'])\
-                .bar(subset=PER, align='left', vmin=0, color=['#bcde93'])\
+                .bar(subset=PER, align='left', vmin=0, color='#bcde93')\
                 .bar(subset=ROE, align='mid', color=['#e68f8f', '#bcde93'])\
                 .bar(subset=QRG, align='mid', vmin=min(0,df[QRG[0]].min()), color=['#e68f8f', '#f4d18b'])\
                 .bar(subset=i_pos, align='mid', vmin=min(0,df[OCFM[0]].min()), vmax=.6, color=['#e68f8f', '#3c76af'])\
                 .bar(subset=i_neg, align='mid', vmin=min(0,df[OCFM[0]].min()), vmax=.6, color=['#e68f8f', '#7eb8ef'])\
-                .format(make_clickable, subset=["Y!","alpha","TS"])
-#                .bar(subset=OCFM, align='left', vmin=0, vmax=.6, color=['#3c76af'])\
-#                .bar(subset=PM, align='left', vmin=0, color=['#aecde1'])\
-#                .bar(subset=OM, align='left', vmin=0, color=['#3c76af'])\
+                .format(make_clickable, subset=["Y!","alpha","TS"])\
+            #    .bar(subset=PM, align='left', vmin=0, color='#aecde1')\
+            #    .bar(subset=OM, align='left', vmin=0, color='#3c76af')
+               # .bar(subset=OCFM, align='left', vmin=0, vmax=.6, color=['#3c76af'])\
+
 
     df_result = df_styler(df_tgt)
-    html=df_result.render()
-    #html=df_result.to_html() # pandas >= 1.3.0
-    import dataframe_image as dfi
+    #html=df_result.render()
+    # html=df_result.to_html() # pandas >= 1.3.0
+    # import dataframe_image as dfi
 
-    file = open("financials.html","w")
-    file.write(html)
-    file.close()
+    # file = open("financials.html","w")
+    # file.write(html)
+    # file.close()
     # dfi.export(html, 'financial.pdf')
     # dfi.export(html, 'financial.png')
 
@@ -506,6 +514,7 @@ def show_valuation(tickers, clear_cache=7, hist=True, table=True, key="PSR", asc
     else:
         print("The top 5 {} stocks ({})".format(key,today()))
         display(df_styler(df_tgt.head()))
+        #display(df_tgt.head())
 
     return df_tgt
 
@@ -683,7 +692,8 @@ def show_beat_ratio(tickers, last=20, threshold=80, min_qtrs=4, clear_cache=Fals
         end = min(i + step, n_tick)
         df_new = get_earnings_history(tickers[i:end], clear_cache, verbose=verbose)
         if len(df_new) != 0:
-            df = df.append(df_new)
+            #df = df.append(df_new)
+            df = pd.concat([df,df_new])
         i = i + step
 
     df_best = _show_beat_ratio(df, last=last, threshold=threshold, min_qtrs=min_qtrs)
@@ -871,4 +881,9 @@ def get_all_data(tickers, last=20, table=True):
 
     table == True and display(show_beat_ratio(df_earnings, last))
     return (df_earnings, df_tickers)
+
+
+if __name__ == '__main__':
+    E12 = ["AAPL", "GOOG", "AMZN", "MSFT"] # Trillion
+    df=show_valuation(E12, table=False, key="Cap")
 

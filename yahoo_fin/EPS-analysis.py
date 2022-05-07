@@ -56,14 +56,14 @@ growth1=ant+saas+ecommerce
 growth2=fintech+media+techs+eauto
 
 # %%
-E12 = ["AAPL", "GOOG", "AMZN", "MSFT","TSLA"] # Trillion
-E11 = ["NVDA", "FB","NFLX", "ADBE","PYPL", "SHOP", "ABNB"] # over 100 Billion
-E10_5 = ["DDOG","ZM", "SQ", "SNOW"]  #, "GM", "F"  # Over 50 Billion
-E10_1 = ["VEEV", "PLTR","TWTR","ROKU", "OKTA", "EPAM", "TTD","U", "MGA",
-         "ETSY","PINS","UPST","MDB", "HUBS"] + ["CRWD", "TWLO", "DOCU" ]#,"LCID"]
+E12 = ["AAPL", "GOOG", "AMZN", "MSFT"] # Trillion
+E11 = ["TSLA", "NVDA", "FB","NFLX", "ADBE","PYPL"] # over 100 Billion
+E10_5 = ["SHOP","ABNB","SQ", "SNOW"]  #, "GM", "F"  # Over 50 Billion
+E10_1 = ["DDOG","ZM", "VEEV", "PLTR","TWTR", "TTD","U", "MGA","ROKU", "OKTA", "EPAM",
+         "ETSY","PINS","MDB", "HUBS"] + ["CRWD", "TWLO", "DOCU" ,"LCID"]
 # over 10 Billion
 
-E9 = ["FIVN",  "MQ", "FVRR","COUR","LAW","SPT", "ONON"] # Under 1 Billion
+E9 = ["FIVN",  "MQ", "FVRR","COUR","LAW","SPT", "ONON","UPST"] # Under 1 Billion
 
 #NODATA=["DLO"]
 
@@ -71,15 +71,21 @@ LIST=E12+E11+E10_5+E10_1+E9
 SLIST=E11+E10_5+E10_1+E9
 
 ###
+#TMP = ["VEEV", "PLTR","TWTR", "TTD","U"]
+# TMP=["MGA","ROKU", "OKTA", "EPAM"]
+# TMP=["ETSY","PINS","UPST","MDB", "HUBS"] 
+# TMP=["CRWD", "TWLO", "DOCU" ]#,"LCID"]
+#mi.show_valuation(TMP, hist=False, table=True, key="PSR")    
 
 # %%
-sorted(LIST)
+#sorted(LIST)
 
 # %% [markdown]
 # ### PSR distribution and Market Cap
 
 # %%
 import importlib
+
 importlib.reload(mi)
 df=mi.show_valuation(LIST, table=False, key="Cap")
 
@@ -113,10 +119,13 @@ mi.search_good_eps(fangam, last=200)
 # ## Energy
 
 # %%
-ENE=["STNG","HLX","FANG","PXD","AR","XOM","SLB","TNP","EURN","CVX"]
+ENE=["AR", "BP","CVX", "DVN", "FANG","FLNG", "HES", "HLX","MRO", "PBR", "PXD","STNG","SLB","TNP","XOM","YPF"]
 df_res=mi.plot_eps_history(ENE,last=20)
 
 # %%
+ENE=["AR", "BP","CVX", "DVN", "FANG","FLNG", "HES"]+["HLX","MRO", "PBR", "PXD", "TNP","XOM"]
+#,"YPF"]#"SLB", "STNG",
+
 df_res=mi.show_valuation(ENE,table=True)
 
 # %% [markdown]
@@ -139,12 +148,12 @@ H_E10 = [
     "RPRX",
 ]
 H_E9 = [
-    "INOV",
     "PGNY",
     "RGEN",
     "INMD",
     "DOCS",
-    "MRK"
+    "MRK",
+#    "JAZZ"
 ]
 health = H_E11 + H_E10 + H_E9
 
@@ -152,13 +161,14 @@ health = H_E11 + H_E10 + H_E9
 import importlib
 importlib.reload(mi)
 # EPS history
-df_res=mi.plot_eps_history(health,last=20)
+df_res=mi.plot_eps_history(H_E11,last=20)
+df_res=mi.plot_eps_history(H_E10,last=20)
+df_res=mi.plot_eps_history(H_E9,last=20)
 
 # %%
 import importlib
 importlib.reload(mi)
-
-df_res=mi.show_valuation(health,table=True)
+df_res=mi.show_valuation(health,table=True)#,verbose=True)
 #df_cap=mi.show_valuation(health,table=True,hist=False,key="Cap")
 
 # %% [markdown]
